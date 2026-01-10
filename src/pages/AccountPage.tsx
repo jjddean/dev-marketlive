@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 const AccountPage = () => {
   const [activeTab, setActiveTab] = useState('profile');
-  
-  // Mock user data
-  const userData = {
+
+  const liveUser = useQuery(api.users.current);
+
+  // Mock user data fallback
+  const HARDCODED_USER = {
     name: 'Alex Johnson',
     email: 'alex.johnson@example.com',
     company: 'Global Shipping Inc.',
@@ -16,6 +20,11 @@ const AccountPage = () => {
     language: 'English',
     twoFactorEnabled: true
   };
+
+  const userData = liveUser ? {
+    ...HARDCODED_USER,
+    name: liveUser.name,
+  } : HARDCODED_USER;
 
   // Mock notification settings
   const notificationSettings = [
@@ -37,28 +46,28 @@ const AccountPage = () => {
     <div className="page-container">
       <h1>Account Settings</h1>
       <p className="account-intro">Manage your profile, security, and notification preferences.</p>
-      
+
       <div className="page-content">
         <div className="account-tabs">
-          <button 
+          <button
             className={`tab-button ${activeTab === 'profile' ? 'active' : ''}`}
             onClick={() => setActiveTab('profile')}
           >
             Profile
           </button>
-          <button 
+          <button
             className={`tab-button ${activeTab === 'security' ? 'active' : ''}`}
             onClick={() => setActiveTab('security')}
           >
             Security
           </button>
-          <button 
+          <button
             className={`tab-button ${activeTab === 'notifications' ? 'active' : ''}`}
             onClick={() => setActiveTab('notifications')}
           >
             Notifications
           </button>
-          <button 
+          <button
             className={`tab-button ${activeTab === 'team' ? 'active' : ''}`}
             onClick={() => setActiveTab('team')}
           >
@@ -133,7 +142,7 @@ const AccountPage = () => {
           <div className="security-section">
             <div className="security-card">
               <h3>Account Security</h3>
-              
+
               <div className="security-item">
                 <div className="security-info">
                   <h4>Password</h4>
@@ -141,7 +150,7 @@ const AccountPage = () => {
                 </div>
                 <button className="security-action-btn">Change Password</button>
               </div>
-              
+
               <div className="security-item">
                 <div className="security-info">
                   <h4>Two-Factor Authentication</h4>
@@ -151,7 +160,7 @@ const AccountPage = () => {
                   {userData.twoFactorEnabled ? 'Manage 2FA' : 'Enable 2FA'}
                 </button>
               </div>
-              
+
               <div className="security-item">
                 <div className="security-info">
                   <h4>Login History</h4>
@@ -164,7 +173,7 @@ const AccountPage = () => {
             <div className="security-card">
               <h3>API Access</h3>
               <p>Manage API keys for integrating with your systems</p>
-              
+
               <div className="api-keys">
                 <div className="api-key-item">
                   <div className="api-key-info">
@@ -176,7 +185,7 @@ const AccountPage = () => {
                     <button className="regenerate-key-btn">Regenerate</button>
                   </div>
                 </div>
-                
+
                 <div className="api-key-item">
                   <div className="api-key-info">
                     <h4>Test API Key</h4>
@@ -188,7 +197,7 @@ const AccountPage = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="api-documentation">
                 <h4>API Documentation</h4>
                 <p>Learn how to integrate with our API</p>
@@ -220,26 +229,26 @@ const AccountPage = () => {
                   <div className="notification-type">{setting.name}</div>
                   <div className="channel-options">
                     <div className="channel">
-                      <input 
-                        type="checkbox" 
-                        id={`email-${setting.id}`} 
-                        checked={setting.email} 
+                      <input
+                        type="checkbox"
+                        id={`email-${setting.id}`}
+                        checked={setting.email}
                       />
                       <label htmlFor={`email-${setting.id}`}></label>
                     </div>
                     <div className="channel">
-                      <input 
-                        type="checkbox" 
-                        id={`sms-${setting.id}`} 
-                        checked={setting.sms} 
+                      <input
+                        type="checkbox"
+                        id={`sms-${setting.id}`}
+                        checked={setting.sms}
                       />
                       <label htmlFor={`sms-${setting.id}`}></label>
                     </div>
                     <div className="channel">
-                      <input 
-                        type="checkbox" 
-                        id={`app-${setting.id}`} 
-                        checked={setting.app} 
+                      <input
+                        type="checkbox"
+                        id={`app-${setting.id}`}
+                        checked={setting.app}
                       />
                       <label htmlFor={`app-${setting.id}`}></label>
                     </div>
@@ -251,7 +260,7 @@ const AccountPage = () => {
             <div className="notification-schedule">
               <h3>Quiet Hours</h3>
               <p>We won't send notifications during these hours</p>
-              
+
               <div className="time-range">
                 <div className="time-input">
                   <label>From:</label>
@@ -272,7 +281,7 @@ const AccountPage = () => {
                   </select>
                 </div>
               </div>
-              
+
               <div className="timezone-note">
                 All times are in your local timezone: {userData.timezone}
               </div>
@@ -332,7 +341,7 @@ const AccountPage = () => {
             <div className="role-permissions">
               <h3>Role Permissions</h3>
               <p>Configure what different roles can access</p>
-              
+
               <div className="role-cards">
                 <div className="role-card">
                   <h4>Admin</h4>
@@ -346,7 +355,7 @@ const AccountPage = () => {
                   </ul>
                   <button className="edit-role-btn">Edit Role</button>
                 </div>
-                
+
                 <div className="role-card">
                   <h4>User</h4>
                   <p>Limited access to features</p>
@@ -358,7 +367,7 @@ const AccountPage = () => {
                   </ul>
                   <button className="edit-role-btn">Edit Role</button>
                 </div>
-                
+
                 <div className="role-card add-role">
                   <div className="add-role-content">
                     <h4>Create Custom Role</h4>
