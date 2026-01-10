@@ -343,8 +343,16 @@ const ShipmentsPage = () => {
         {/* Real-Time Tracking for Active Shipments */}
         {activeTab === 'active' && (
           <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <RealTimeTracker shipmentId="SH-2024-001" />
-            <RealTimeTracker shipmentId="SH-2024-002" />
+            {(liveData && liveData.filter((s: any) => s.status !== 'Delivered').length > 0) ? (
+              liveData.filter((s: any) => s.status !== 'Delivered').slice(0, 2).map((s: any) => (
+                <RealTimeTracker key={s.shipmentId} shipmentId={s.shipmentId} />
+              ))
+            ) : (
+              <>
+                <RealTimeTracker shipmentId="SH-2024-001" />
+                <RealTimeTracker shipmentId="SH-2024-002" />
+              </>
+            )}
           </div>
         )}
       </div>

@@ -11,14 +11,18 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
 const DashboardPage = () => {
-  const liveMetrics = {
-    activeShipments: 12,
-    pendingDocuments: 5,
-    outstandingInvoices: 3,
-    monthlyRevenue: 45000
-  };
-
+  // Live data hooks
   const liveShipments = useQuery(api.shipments.listShipments, { onlyMine: true });
+  const liveDocuments = useQuery(api.documents.listMyDocuments, {});
+  const liveBookings = useQuery(api.bookings.listMyBookings, {});
+
+  // Dynamic metrics calculation
+  const liveMetrics = {
+    activeShipments: liveShipments?.filter(s => s.status !== 'Delivered').length ?? 12,
+    pendingDocuments: liveDocuments?.filter(d => d.status === 'pending' || d.status === 'draft').length ?? 5,
+    outstandingInvoices: 3, // Keep hardcoded until invoices API is ready
+    monthlyRevenue: 45000 // Keep hardcoded until financial API is ready
+  };
 
   const HARDCODED_SHIPMENTS = [
     {
