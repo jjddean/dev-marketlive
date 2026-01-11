@@ -76,22 +76,38 @@ export const createInstantQuoteAndBooking = mutation({
     }),
   },
   handler: async (ctx, { request }) => {
-    // Use mock pricing for instant quote
+    // Import pricing engine
+    const { calculateShippingPrice, estimateTransitTime } = await import('./pricing');
+
+    // Calculate real price based on route, weight, and service type
+    const pricing = calculateShippingPrice({
+      origin: request.origin,
+      destination: request.destination,
+      weight: request.weight,
+      serviceType: request.serviceType,
+      cargoType: request.cargoType,
+    });
+
+    const transitTime = estimateTransitTime(request.origin, request.destination, request.serviceType);
+
+    // Use real pricing for instant quote
     const quoteId = `QT-${Date.now()}`;
     const quotes = [
       {
-        carrierId: "DHL",
-        carrierName: "DHL Express",
+        carrierId: "CARRIER-001",
+        carrierName: request.serviceType === 'sea' ? 'Maersk Line' :
+          request.serviceType === 'air' ? 'DHL Air Freight' :
+            'FedEx Express',
         serviceType: request.serviceType || "air",
-        transitTime: "2-4 days",
+        transitTime: transitTime,
         price: {
-          amount: 450.0,
+          amount: pricing.total,
           currency: "USD",
           breakdown: {
-            baseRate: 360.0,
-            fuelSurcharge: 60.0,
-            securityFee: 20.0,
-            documentation: 10.0,
+            baseRate: pricing.baseRate,
+            fuelSurcharge: pricing.fuelSurcharge,
+            securityFee: pricing.securityFee,
+            documentation: pricing.documentation,
           },
         },
         validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
@@ -140,7 +156,7 @@ export const createInstantQuoteAndBooking = mutation({
       },
       specialInstructions: undefined,
     };
-    
+
     const booking: any = await ctx.runMutation(api.bookings.createBooking, bookingArgs);
 
     return { quoteId, convexQuoteId: docId, booking };

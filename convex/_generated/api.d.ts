@@ -17,6 +17,7 @@ import type * as geo from "../geo.js";
 import type * as http from "../http.js";
 import type * as paymentAttemptTypes from "../paymentAttemptTypes.js";
 import type * as paymentAttempts from "../paymentAttempts.js";
+import type * as pricing from "../pricing.js";
 import type * as quotes from "../quotes.js";
 import type * as reporting from "../reporting.js";
 import type * as search from "../search.js";
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   paymentAttemptTypes: typeof paymentAttemptTypes;
   paymentAttempts: typeof paymentAttempts;
+  pricing: typeof pricing;
   quotes: typeof quotes;
   reporting: typeof reporting;
   search: typeof search;
