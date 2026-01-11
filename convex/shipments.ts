@@ -1,4 +1,5 @@
 import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { v } from "convex/values";
 
 export const upsertShipment = mutation({
@@ -53,6 +54,7 @@ export const upsertShipment = mutation({
     let shipmentDocId = existing?._id;
 
     if (existing) {
+      const oldStatus = existing.status;
       await ctx.db.patch(existing._id, {
         status: tracking.status,
         currentLocation: tracking.currentLocation,
@@ -64,6 +66,15 @@ export const upsertShipment = mutation({
         lastUpdated: Date.now(),
         ...(existing.userId ? {} : currentUserId ? { userId: currentUserId as any } : {}),
       });
+
+      // Trigger automated workflow if status changed
+      if (oldStatus !== tracking.status) {
+        await ctx.scheduler.runAfter(0, internal.workflows.onShipmentStatusChange, {
+          shipmentId,
+          oldStatus,
+          newStatus: tracking.status,
+        });
+      }
     } else {
       shipmentDocId = await ctx.db.insert("shipments", {
         shipmentId,
