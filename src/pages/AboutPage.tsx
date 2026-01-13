@@ -1,70 +1,104 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import MediaCardHeader from '@/components/ui/media-card-header';
 
 const AboutPage = () => {
-  const milestones = [
-    { year: 2018, event: "Founded with a mission to simplify freight coordination" },
-    { year: 2019, event: "Launched our first digital documentation platform" },
-    { year: 2020, event: "Expanded services to include risk advisory" },
-    { year: 2021, event: "Introduced AI-powered quote engine" },
-    { year: 2022, event: "Reached 1,000+ business clients globally" },
-    { year: 2023, event: "Opened regional offices in Asia and Europe" }
+  const stats = [
+    { label: "Years of Excellence", value: "25+" },
+    { label: "Countries Served", value: "140+" },
+    { label: "Annual Shipments", value: "50k+" },
+    { label: "Expert Agents", value: "300+" }
+  ];
+
+  const team = [
+    { name: "James Wilson", role: "Chief Executive Officer", image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" },
+    { name: "Sarah Chen", role: "Head of Global Operations", image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" },
+    { name: "Michael Ross", role: "Director of customs", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" }
   ];
 
   return (
-    <div className="page-container">
-      <h1>Who We Are</h1>
-      <div className="page-content">
-        <div className="about-intro">
-          <p className="about-mission">
-            Born out of the need for simplicity in freight, we use tech to empower shippers globally.
-          </p>
-        </div>
-        
-        <div className="about-story">
-          <h2>Our Story</h2>
-          <p>
-            FreightSync was founded by a team of logistics professionals who experienced 
-            firsthand the inefficiencies and complexities of traditional freight forwarding. 
-            We set out to create a solution that combines industry expertise with modern 
-            technology to make shipping simpler, more transparent, and more efficient.
-          </p>
-          <p>
-            Today, we serve businesses of all sizes across the globe, helping them navigate 
-            the complexities of international shipping with confidence and ease.
-          </p>
-        </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Hero Section */}
+      <MediaCardHeader
+        title="Driving Global Commerce"
+        description="We are more than just a freight forwarder. We are your strategic partner in international trade."
+        backgroundImage="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+        overlayOpacity={0.6}
+        className="h-[400px] lg:h-[500px]"
+      >
+      </MediaCardHeader>
 
-        <div className="about-timeline">
-          <h2>Our Journey</h2>
-          <div className="timeline">
-            {milestones.map((milestone, index) => (
-              <div key={index} className="timeline-item">
-                <div className="timeline-year">{milestone.year}</div>
-                <div className="timeline-content">{milestone.event}</div>
+      {/* Mission Section */}
+      <div className="bg-white py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <h2 className="text-2xl font-bold text-primary-900 mb-6">Our Mission</h2>
+              <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+                At MarketLive, our mission is to simplify the complexities of global supply chains.
+                We believe that logistics should be an accelerator for your business, not a bottleneck.
+              </p>
+              <p className="text-lg text-gray-600 mb-8 leading-relaxed">
+                By combining decades of industry expertise with next-generation technology,
+                we provide visibility, reliability, and control over your cargo, anywhere in the world.
+              </p>
+              <div className="grid grid-cols-2 gap-8">
+                {stats.map((stat, index) => (
+                  <div key={index} className="border-l-4 border-secondary pl-6">
+                    <div className="text-3xl font-bold text-primary-900 mb-1">{stat.value}</div>
+                    <div className="text-sm text-gray-600 font-medium uppercase tracking-wide">{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="relative">
+              <div className="absolute -inset-4 bg-primary-100 rounded-2xl transform rotate-3"></div>
+              <img
+                src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+                alt="Our Office"
+                className="relative rounded-xl shadow-2xl"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Team Section */}
+      <div className="bg-gray-50 py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-2xl font-bold text-primary-900 mb-4">Leadership Team</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Guided by industry veterans committed to innovation and service excellence.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {team.map((member, index) => (
+              <div key={index} className="bg-white rounded-xl p-8 shadow-sm hover:shadow-lg transition-all border border-gray-100 text-center group">
+                <div className="w-20 h-20 mx-auto bg-primary-50 rounded-full flex items-center justify-center text-2xl font-bold text-primary-700 mb-6 group-hover:bg-primary-100 transition-colors">
+                  {member.name.split(' ').map(n => n[0]).join('')}
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{member.name}</h3>
+                <p className="text-primary-600 font-medium">{member.role}</p>
               </div>
             ))}
           </div>
         </div>
+      </div>
 
-        <div className="about-values">
-          <h2>Our Values</h2>
-          <div className="values-grid">
-            <div className="value-card">
-              <h3>Transparency</h3>
-              <p>We believe in clear communication and visibility throughout the shipping process.</p>
-            </div>
-            <div className="value-card">
-              <h3>Innovation</h3>
-              <p>We continuously improve our technology to better serve our clients.</p>
-            </div>
-            <div className="value-card">
-              <h3>Reliability</h3>
-              <p>We deliver on our promises and prioritize consistency in our service.</p>
-            </div>
-            <div className="value-card">
-              <h3>Expertise</h3>
-              <p>We combine industry knowledge with technological solutions.</p>
-            </div>
+      {/* CTA Banner */}
+      <div className="bg-primary-900 py-16">
+        <div className="max-w-5xl mx-auto px-4 text-center">
+          <h2 className="text-2xl font-bold text-white mb-6">Join Our Global Network</h2>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild size="lg" className="bg-secondary hover:bg-secondary/90 text-white px-8">
+              <Link to="/contact">Contact Us</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="border-white text-white hover:bg-white/10 px-8">
+              <Link to="/careers">View Careers</Link>
+            </Button>
           </div>
         </div>
       </div>

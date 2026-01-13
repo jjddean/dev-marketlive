@@ -62,11 +62,13 @@ const DocumentsPage = () => {
     const [recipientEmail, setRecipientEmail] = useState('');
     const [sending, setSending] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
+    const [lastError, setLastError] = useState<string | null>(null);
 
     // Mutations
     const createDocument = useMutation(api.documents.createDocument);
     const setDocusignEnvelope = useMutation(api.documents.setDocusignEnvelope);
     const generateShareLink = useMutation((api as any).documents.generateShareLink);
+    const sendEnvelope = useAction((api as any).docusign.sendEnvelope);
 
     // --- Actions ---
 
@@ -82,15 +84,33 @@ const DocumentsPage = () => {
     };
 
     const handleSendForSignature = async () => {
-        if (!sendDoc || !recipientEmail) return;
-        setSending(true);
-        try {
-            await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network
+        if (!sendDoc) return;
+        if (!recipientEmail) {
+            toast.error("Please enter Email.");
+            return;
+        }
 
-            const envelopeId = `ENV-${Date.now()}`;
+        setSending(true);
+        toast.info("Connecting to DocuSign...");
+
+        try {
+            // REAL DOCUSIGN INTEGRATION
+            console.log("Calling api.docusign.sendEnvelope...");
+
+            const result: any = await sendEnvelope({
+                documentId: sendDoc._id,
+                documentTitle: sendDoc.documentData?.documentNumber || "Logistics Document",
+                signerName: recipientName,
+                signerEmail: recipientEmail,
+            });
+
+            console.log("Msg Sent Result:", result);
+            const finalEnvelopeId = typeof result === 'string' ? result : (result.envelopeId || result.id);
+
+            // Update Database with the returned Envelope ID
             await setDocusignEnvelope({
                 documentId: sendDoc._id,
-                envelopeId,
+                envelopeId: finalEnvelopeId as string,
                 status: 'sent',
                 recipients: [{
                     name: recipientName,
@@ -100,12 +120,14 @@ const DocumentsPage = () => {
                 }]
             });
 
-            toast.success(`Envelope sent! ID: ${envelopeId}`);
+
+            toast.success(`Success! Envelope ID: ${finalEnvelopeId}`);
             setSendOpen(false);
             setRecipientName('');
             setRecipientEmail('');
         } catch (e: any) {
-            toast.error(`Failed to send: ${e.message}`);
+            console.error("DOCUSIGN ERROR:", e);
+            toast.error(`DocuSign Failed: ${e.message || "Unknown Error"}`);
         } finally {
             setSending(false);
         }
@@ -257,7 +279,9 @@ const DocumentsPage = () => {
                     </div>
                     <div className="flex space-x-3">
                         <SmartUploadButton onParse={async (data) => {
-                            // Pre-fill form and open drawer
+                            setAutofillData(data);
+                            setCreateOpen(true);
+                            toast.success("Form Auto-Filled by AI!");
                         }} />
 
                         <Button variant="outline" onClick={() => {
@@ -540,6 +564,9 @@ function SmartUploadButton({ onParse }: { onParse: (data: any) => void }) {
                 toast.dismiss('ollama-load');
                 // Proceed to fallback
             }
+
+            // 2. Fallback to Cloud Mock
+
 
             // 2. Fallback to Cloud Mock
             const result = await parseDocument({

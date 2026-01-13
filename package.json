@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "kill-ports": "taskkill /F /IM node.exe || echo No node processes found"
   },
   "devDependencies": {
     "@types/node": "^24.1.0",
@@ -31,6 +32,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "convex": "^1.31.3",
+    "docusign-esign": "^8.5.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.536.0",
     "mapbox-gl": "^3.17.0",

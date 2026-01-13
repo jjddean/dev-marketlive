@@ -12,9 +12,9 @@ export function CommandMenu() {
     const [search, setSearch] = React.useState("");
     const navigate = useNavigate();
 
-    // Search Query - temporarily disabled to fix Vercel runtime error
+    // Search Query - Disabled per user request
     // const results = useQuery(api.search.globalSearch, search ? { query: search } : "skip");
-    const results: any = {}; // Empty results for now
+    const results: any = {}; // Empty results
 
     React.useEffect(() => {
         const down = (e: KeyboardEvent) => {

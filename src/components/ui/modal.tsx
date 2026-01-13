@@ -59,14 +59,14 @@ const Modal: React.FC<ModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div 
+    <div className="fixed inset-0 z-50 overflow-y-auto outline-none focus:outline-none">
+      <div
         className="flex min-h-screen items-center justify-center p-4 text-center sm:p-0"
         onClick={handleOverlayClick}
       >
         {/* Overlay */}
         <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" />
-        
+
         {/* Modal */}
         <div className={cn(
           "relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 w-full",

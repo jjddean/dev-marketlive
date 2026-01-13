@@ -5,6 +5,7 @@ import Navbar from './components/Navbar';
 import MobileNavigation from './components/mobile/MobileNavigation';
 import { CommandMenu } from './components/CommandMenu';
 import { AIAssistant } from './components/ai/AIAssistant';
+import { Toaster } from 'sonner';
 
 // ... (other imports)
 // Note: I cannot replace imports easily if they are scattered. 
@@ -83,6 +84,8 @@ function Layout({ children }: LayoutProps) {
       <MobileNavigation />
       {/* <CommandMenu /> - temporarily disabled due to Convex connection issue */}
       <AIAssistant />
+      <AIAssistant />
+      <Toaster richColors position="bottom-right" />
       <main className="min-h-screen">{children}</main>
     </>
   );

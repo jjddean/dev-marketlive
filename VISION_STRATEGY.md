@@ -69,3 +69,18 @@ The project is complete when a user can perform the following **"Golden Path"** 
 4.  **Track** the resulting shipment on a Map.
 5.  **Upload** a Commercial Invoice to clear customs.
 6.  **Log Out** knowing their supply chain is under control.
+
+---
+
+## 6. Admin Portal Strategy (The "God Mode")
+To support the platform, a full **Admin Side** (`/admin`) is required, distinct from the User Client.
+
+### Requirements:
+*   **User Management:** View/Edit/Ban users.
+*   **Shipment Override:** Edit any shipment for any client (God Mode).
+*   **System Config:** Manage API keys and global settings.
+*   **Analytics:** Global revenue and volume tracking.
+
+**Architecture:**
+*   Protected by `role: admin` check.
+*   Uses a distinct layout (e.g., Red/Dark sidebar) to prevent confusion with Client App.
