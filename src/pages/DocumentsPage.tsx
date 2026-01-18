@@ -210,28 +210,42 @@ const DocumentsPage = () => {
         {
             key: '_id',
             header: 'Actions',
-            render: (_: string, row: any) => (
-                <div className="flex space-x-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleOpenDetail(row)} title="View Details">
-                        <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => navigate(`/documents/print/${row._id}`)} title="Print / PDF">
-                        <Printer className="h-4 w-4" />
-                    </Button>
-                    {row.docusign?.envelopeId ? (
-                        <Button variant="ghost" size="icon" onClick={() => handleRefreshStatus(row)} disabled={refreshing} title="Refresh Status">
-                            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            render: (_: string, row: any) => {
+                // Hybrid model: Only allow sending for signature if:
+                // 1. Document doesn't have an envelope already
+                // 2. Document was uploaded by client OR uploadedBy is undefined (legacy docs)
+                const canSendForSignature = !row.docusign?.envelopeId &&
+                    (row.uploadedBy === 'client' || row.uploadedBy === undefined);
+
+                const isPlatformDoc = row.uploadedBy === 'system';
+
+                return (
+                    <div className="flex space-x-2">
+                        <Button variant="ghost" size="icon" onClick={() => handleOpenDetail(row)} title="View Details">
+                            <Eye className="h-4 w-4" />
                         </Button>
-                    ) : (
-                        <Button variant="ghost" size="icon" onClick={() => handleOpenSend(row)} title="Send for Signature">
-                            <Send className="h-4 w-4" />
+                        <Button variant="ghost" size="icon" onClick={() => navigate(`/documents/print/${row._id}`)} title="Print / PDF">
+                            <Printer className="h-4 w-4" />
                         </Button>
-                    )}
-                    <Button variant="ghost" size="icon" onClick={() => handleShare(row)} title="Share Public Link">
-                        <Share2 className="h-4 w-4" />
-                    </Button>
-                </div>
-            )
+                        {row.docusign?.envelopeId ? (
+                            <Button variant="ghost" size="icon" onClick={() => handleRefreshStatus(row)} disabled={refreshing} title="Refresh Status">
+                                <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                            </Button>
+                        ) : canSendForSignature ? (
+                            <Button variant="ghost" size="icon" onClick={() => handleOpenSend(row)} title="Send for Signature">
+                                <Send className="h-4 w-4" />
+                            </Button>
+                        ) : isPlatformDoc ? (
+                            <span className="px-2 py-1 text-xs text-gray-400" title="Platform-generated docs are sent by admin">
+                                Admin Only
+                            </span>
+                        ) : null}
+                        <Button variant="ghost" size="icon" onClick={() => handleShare(row)} title="Share Public Link">
+                            <Share2 className="h-4 w-4" />
+                        </Button>
+                    </div>
+                );
+            }
         },
     ];
 
