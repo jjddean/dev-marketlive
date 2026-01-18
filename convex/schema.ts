@@ -12,10 +12,14 @@ export default defineSchema({
     email: v.optional(v.string()),
     // this the Clerk ID, stored in the subject JWT field
     externalId: v.string(),
+    // Multi-tenancy: Clerk Organization ID
+    orgId: v.optional(v.string()),
+    role: v.optional(v.string()), // "client", "admin", "platform:superadmin"
     subscriptionTier: v.optional(v.string()), // "free", "pro"
     subscriptionStatus: v.optional(v.string()), // "active", "canceled", "past_due"
     stripeCustomerId: v.optional(v.string()),
-  }).index("byExternalId", ["externalId"]),
+  }).index("byExternalId", ["externalId"])
+    .index("byOrgId", ["orgId"]),
 
   paymentAttempts: defineTable(paymentAttemptSchemaValidator)
     .index("byPaymentId", ["payment_id"])
@@ -65,9 +69,11 @@ export default defineSchema({
       validUntil: v.string(),
     })),
     userId: v.optional(v.id("users")),
+    orgId: v.optional(v.string()), // Multi-tenancy
     createdAt: v.number(),
   }).index("byUserId", ["userId"])
-    .index("byQuoteId", ["quoteId"]),
+    .index("byQuoteId", ["quoteId"])
+    .index("byOrgId", ["orgId"]),
 
   shipments: defineTable({
     shipmentId: v.string(),
@@ -93,11 +99,13 @@ export default defineSchema({
       value: v.string(),
     }),
     userId: v.optional(v.id("users")),
+    orgId: v.optional(v.string()), // Multi-tenancy
     lastUpdated: v.number(),
     createdAt: v.number(),
   }).index("byUserId", ["userId"])
     .index("byShipmentId", ["shipmentId"])
-    .index("byTrackingNumber", ["trackingNumber"]),
+    .index("byTrackingNumber", ["trackingNumber"])
+    .index("byOrgId", ["orgId"]),
 
   trackingEvents: defineTable({
     shipmentId: v.id("shipments"),
@@ -137,11 +145,13 @@ export default defineSchema({
     specialInstructions: v.optional(v.string()),
     notes: v.optional(v.string()),
     userId: v.optional(v.id("users")),
+    orgId: v.optional(v.string()), // Multi-tenancy
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("byUserId", ["userId"])
     .index("byBookingId", ["bookingId"])
-    .index("byQuoteId", ["quoteId"]),
+    .index("byQuoteId", ["quoteId"])
+    .index("byOrgId", ["orgId"]),
 
   documents: defineTable({
     type: v.string(), // "bill_of_lading", "air_waybill", "commercial_invoice"
@@ -197,6 +207,8 @@ export default defineSchema({
       }))),
     })),
     userId: v.optional(v.id("users")),
+    orgId: v.optional(v.string()), // Multi-tenancy
+    uploadedBy: v.optional(v.string()), // "client" | "system" - for hybrid model
     shareToken: v.optional(v.string()), // For public sharing
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -204,7 +216,8 @@ export default defineSchema({
     .index("byType", ["type"])
     .index("byBookingId", ["bookingId"])
     .index("byShipmentId", ["shipmentId"])
-    .index("byShareToken", ["shareToken"]),
+    .index("byShareToken", ["shareToken"])
+    .index("byOrgId", ["orgId"]),
 
   geoRoutes: defineTable({
     key: v.string(),
@@ -235,7 +248,9 @@ export default defineSchema({
     })),
     createdAt: v.number(),
     updatedAt: v.number(),
+    orgId: v.optional(v.string()), // Multi-tenancy
   }).index("byBookingId", ["bookingId"])
     .index("byCustomerId", ["customerId"])
-    .index("byInvoiceNumber", ["invoiceNumber"]),
+    .index("byInvoiceNumber", ["invoiceNumber"])
+    .index("byOrgId", ["orgId"]),
 }); 
