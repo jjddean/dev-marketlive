@@ -6,10 +6,18 @@ import { UserProfile } from '@clerk/clerk-react';
 import Footer from '@/components/layout/Footer';
 import { useQuery, useAction, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const PaymentsPage = () => {
   const [activeTab, setActiveTab] = useState('invoices');
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
 
   // Live payment data from Convex
   const livePayments = useQuery(api.paymentAttempts.listMyPayments) || [];
@@ -40,7 +48,7 @@ const PaymentsPage = () => {
     try {
       const { url } = await createCheckout({ type: 'invoice', invoiceId });
       if (url) {
-        window.location.href = url;
+        window.open(url, '_blank');
       } else {
         alert("Error: No Checkout URL returned.");
       }
@@ -144,10 +152,7 @@ const PaymentsPage = () => {
       header: 'Actions',
       render: (value: string, row: typeof invoices[0]) => (
         <div className="flex space-x-2">
-          <Button variant="outline" size="sm" onClick={() => {
-            // Simple View Logic
-            alert(`Invoice Details:\nID: ${row.id}\nAmount: £${row.amount}\nDescription: ${row.description}\nStatus: ${row.status}`);
-          }}>View</Button>
+          <Button variant="outline" size="sm" onClick={() => setSelectedInvoice(row)}>View</Button>
           {row.status === 'Pending' && (
             <Button size="sm" onClick={() => handlePayInvoice(row.id)} disabled={processingId === row.id}>
               {processingId === row.id ? 'Processing...' : 'Pay Now'}
@@ -233,6 +238,64 @@ const PaymentsPage = () => {
 
 
       </div>
+
+      {/* Invoice Detail Dialog */}
+      <Dialog open={!!selectedInvoice} onOpenChange={(open) => !open && setSelectedInvoice(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Invoice Details</DialogTitle>
+            <DialogDescription>
+              {selectedInvoice?.id}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedInvoice && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-500">Amount</p>
+                  <p className="text-xl font-bold text-primary">£{selectedInvoice.amount?.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Status</p>
+                  <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${selectedInvoice.status === 'Paid' ? 'bg-green-100 text-green-800' :
+                    selectedInvoice.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                      selectedInvoice.status === 'Overdue' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                    }`}>
+                    {selectedInvoice.status}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <p className="text-gray-500 text-sm">Description</p>
+                <p className="font-medium">{selectedInvoice.description}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-500">Issue Date</p>
+                  <p>{selectedInvoice.date}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Due Date</p>
+                  <p>{selectedInvoice.dueDate}</p>
+                </div>
+              </div>
+              <div>
+                <p className="text-gray-500 text-sm">Shipment Reference</p>
+                <p className="font-mono">{selectedInvoice.shipment}</p>
+              </div>
+              {selectedInvoice.status === 'Pending' && (
+                <Button className="w-full" onClick={() => {
+                  handlePayInvoice(selectedInvoice.id);
+                  setSelectedInvoice(null);
+                }}>
+                  Pay Now
+                </Button>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>

@@ -99,13 +99,37 @@
     text-align: left;
   }
 
-  /* Page container */
+  /* Page container with smooth animations */
   .page-container {
     @apply py-8;
+    animation: fadeIn 0.3s ease-out;
   }
 
   .page-content {
     @apply mt-6;
+    animation: slideUp 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   /* Public page styles */

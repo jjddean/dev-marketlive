@@ -101,7 +101,6 @@ const DocumentsPage = () => {
 
             const result: any = await sendEnvelope({
                 documentId: sendDoc._id,
-                documentTitle: sendDoc.documentData?.documentNumber || "Logistics Document",
                 signerName: recipientName,
                 signerEmail: recipientEmail,
             });
