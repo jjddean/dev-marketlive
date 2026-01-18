@@ -273,4 +273,22 @@ export default defineSchema({
     .index("byCustomerId", ["customerId"])
     .index("byInvoiceNumber", ["invoiceNumber"])
     .index("byOrgId", ["orgId"]),
+
+  // Audit logs for compliance tracking
+  auditLogs: defineTable({
+    action: v.string(), // "booking.created", "document.signed", "user.login", etc.
+    entityType: v.string(), // "booking", "document", "shipment", "user"
+    entityId: v.optional(v.string()), // ID of the affected entity
+    userId: v.optional(v.string()), // Clerk user ID who performed the action
+    userEmail: v.optional(v.string()), // Email of the user
+    orgId: v.optional(v.string()), // Organization context
+    details: v.optional(v.any()), // Additional metadata (JSON)
+    ipAddress: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+    timestamp: v.number(),
+  }).index("byAction", ["action"])
+    .index("byEntityType", ["entityType"])
+    .index("byUserId", ["userId"])
+    .index("byOrgId", ["orgId"])
+    .index("byTimestamp", ["timestamp"]),
 }); 

@@ -286,3 +286,11 @@ export const listDocuments = query({
     return docs;
   },
 });
+
+// Get a single document by ID (for PDF generation)
+export const getDocumentById = query({
+  args: { documentId: v.id("documents") },
+  handler: async (ctx, { documentId }) => {
+    return await ctx.db.get(documentId);
+  },
+});

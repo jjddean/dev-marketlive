@@ -10,6 +10,7 @@
 
 import type * as admin from "../admin.js";
 import type * as ai from "../ai.js";
+import type * as auditLogs from "../auditLogs.js";
 import type * as authHelpers from "../authHelpers.js";
 import type * as billing from "../billing.js";
 import type * as bookings from "../bookings.js";
@@ -23,6 +24,7 @@ import type * as organizations from "../organizations.js";
 import type * as paymentAttemptTypes from "../paymentAttemptTypes.js";
 import type * as paymentAttempts from "../paymentAttempts.js";
 import type * as payments from "../payments.js";
+import type * as pdfGenerator from "../pdfGenerator.js";
 import type * as pricing from "../pricing.js";
 import type * as quotes from "../quotes.js";
 import type * as reporting from "../reporting.js";
@@ -43,6 +45,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   ai: typeof ai;
+  auditLogs: typeof auditLogs;
   authHelpers: typeof authHelpers;
   billing: typeof billing;
   bookings: typeof bookings;
@@ -56,6 +59,7 @@ declare const fullApi: ApiFromModules<{
   paymentAttemptTypes: typeof paymentAttemptTypes;
   paymentAttempts: typeof paymentAttempts;
   payments: typeof payments;
+  pdfGenerator: typeof pdfGenerator;
   pricing: typeof pricing;
   quotes: typeof quotes;
   reporting: typeof reporting;
