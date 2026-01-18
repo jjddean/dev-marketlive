@@ -41,6 +41,7 @@ import AdminCompliancePage from './pages/admin/AdminCompliancePage';
 import AdminCustomersPage from './pages/admin/AdminCustomersPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 import DocumentPrintPage from './pages/DocumentPrintPage';
+import ClientSidebar from './components/layout/ClientSidebar';
 import { useRole } from './hooks/useRole';
 
 // Initialization
@@ -173,18 +174,17 @@ export default function App() {
                 </ProtectedRoute>
               } />
 
-              {/* Protected User Routes */}
-              {/* Protected User Routes - TEMPORARILY UNPROTECTED FOR DEMO */}
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/shipments" element={<ShipmentsPage />} />
-              <Route path="/account" element={<AccountPage />} />
-              <Route path="/quotes" element={<ClientQuotesPage />} />
-              <Route path="/bookings" element={<ClientBookingsPage />} />
-              <Route path="/payments" element={<PaymentsPage />} />
-              <Route path="/documents" element={<DocumentsPage />} />
+              {/* Protected User Routes with Client Sidebar */}
+              <Route path="/dashboard" element={<ClientSidebar><DashboardPage /></ClientSidebar>} />
+              <Route path="/shipments" element={<ClientSidebar><ShipmentsPage /></ClientSidebar>} />
+              <Route path="/account" element={<ClientSidebar><AccountPage /></ClientSidebar>} />
+              <Route path="/quotes" element={<ClientSidebar><ClientQuotesPage /></ClientSidebar>} />
+              <Route path="/bookings" element={<ClientSidebar><ClientBookingsPage /></ClientSidebar>} />
+              <Route path="/payments" element={<ClientSidebar><PaymentsPage /></ClientSidebar>} />
+              <Route path="/documents" element={<ClientSidebar><DocumentsPage /></ClientSidebar>} />
               <Route path="/documents/print/:documentId" element={<DocumentPrintPage />} />
-              <Route path="/compliance" element={<CompliancePage />} />
-              <Route path="/reports" element={<ReportsPage />} />
+              <Route path="/compliance" element={<ClientSidebar><CompliancePage /></ClientSidebar>} />
+              <Route path="/reports" element={<ClientSidebar><ReportsPage /></ClientSidebar>} />
 
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
