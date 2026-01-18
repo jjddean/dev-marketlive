@@ -1,5 +1,5 @@
-import { internalMutation, query } from "./_generated/server";
-import type { QueryCtx } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
+import type { QueryCtx, MutationCtx } from "./_generated/server";
 import type { UserJSON } from "@clerk/backend";
 import { v } from "convex/values";
 import type { Validator } from "convex/values";
@@ -74,3 +74,55 @@ async function userByExternalId(ctx: QueryCtx, externalId: string) {
     .withIndex("byExternalId", (q) => q.eq("externalId", externalId))
     .unique();
 }
+
+// Role management - Only platform admins can change roles
+export const setUserRole = mutation({
+  args: {
+    userId: v.id("users"),
+    role: v.union(v.literal("client"), v.literal("admin"), v.literal("platform:superadmin")),
+  },
+  async handler(ctx, { userId, role }) {
+    // Check if current user is a platform admin
+    const currentUser = await getCurrentUser(ctx);
+    if (!currentUser || currentUser.role !== "platform:superadmin") {
+      throw new Error("Only platform admins can change user roles");
+    }
+
+    await ctx.db.patch(userId, { role });
+    return { success: true };
+  },
+});
+
+// Get user by ID (for admin views)
+export const getUser = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId }) => {
+    return await ctx.db.get(userId);
+  },
+});
+
+// List users for admin (with org filtering)
+export const listUsersForOrg = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+
+    const orgId = (identity as any).org_id;
+
+    if (orgId) {
+      return await ctx.db
+        .query("users")
+        .withIndex("byOrgId", (q) => q.eq("orgId", orgId))
+        .collect();
+    }
+
+    // Platform admins can see all users
+    const currentUser = await getCurrentUser(ctx);
+    if (currentUser?.role === "platform:superadmin") {
+      return await ctx.db.query("users").collect();
+    }
+
+    return [];
+  },
+});

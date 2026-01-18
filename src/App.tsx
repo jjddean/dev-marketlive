@@ -41,6 +41,7 @@ import AdminCompliancePage from './pages/admin/AdminCompliancePage';
 import AdminCustomersPage from './pages/admin/AdminCustomersPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 import DocumentPrintPage from './pages/DocumentPrintPage';
+import { useRole } from './hooks/useRole';
 
 // Initialization
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -101,20 +102,27 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Admin Route Wrapper
+// Admin Route Wrapper - Role-based permissions
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoaded } = useUser();
+  const { isAdmin, isPlatformAdmin, isLoading: isRoleLoading } = useRole();
 
-  if (!isLoaded) return <div className="p-20 text-center">Loading...</div>;
+  if (!isLoaded || isRoleLoading) return <div className="p-20 text-center">Loading...</div>;
 
-  const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS || '').split(',');
+  // Allow access if user is admin or platform superadmin
+  // Also fallback to email whitelist for backward compatibility during migration
+  const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS || '').split(',').filter(Boolean);
   const userEmail = user?.primaryEmailAddress?.emailAddress;
+  const isEmailWhitelisted = userEmail && adminEmails.includes(userEmail);
 
-  if (!user || !adminEmails.includes(userEmail || '')) {
+  if (!user || (!isAdmin && !isEmailWhitelisted)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 flex-col">
         <h1 className="text-3xl font-bold text-red-600 mb-2">Access Denied</h1>
         <p className="text-gray-600 mb-6">You do not have permission to view the Admin Portal.</p>
+        <p className="text-sm text-gray-400 mb-4">
+          Role required: <code className="bg-gray-100 px-2 py-1 rounded">admin</code> or <code className="bg-gray-100 px-2 py-1 rounded">platform:superadmin</code>
+        </p>
         <Button onClick={() => window.location.href = '/dashboard'}>Return to Dashboard</Button>
       </div>
     );
