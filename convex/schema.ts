@@ -21,6 +21,19 @@ export default defineSchema({
   }).index("byExternalId", ["externalId"])
     .index("byOrgId", ["orgId"]),
 
+  // Organizations table - synced from Clerk
+  organizations: defineTable({
+    clerkOrgId: v.string(), // Clerk organization ID
+    name: v.string(),
+    slug: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
+    createdBy: v.optional(v.string()), // Clerk user ID who created it
+    membersCount: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("byClerkOrgId", ["clerkOrgId"])
+    .index("bySlug", ["slug"]),
+
   paymentAttempts: defineTable(paymentAttemptSchemaValidator)
     .index("byPaymentId", ["payment_id"])
     .index("byUserId", ["userId"])

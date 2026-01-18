@@ -36,9 +36,43 @@ http.route({
         });
         break;
       }
-      
 
-      
+      // Organization events - sync to Convex
+      case "organization.created":
+      case "organization.updated":
+        await ctx.runMutation(internal.organizations.upsertFromClerk, {
+          data: event.data as any,
+        });
+        break;
+
+      case "organization.deleted": {
+        const clerkOrgId = (event.data as any).id!;
+        await ctx.runMutation(internal.organizations.deleteFromClerk, { clerkOrgId });
+        break;
+      }
+
+      // Organization membership events - update user's org
+      case "organizationMembership.created":
+      case "organizationMembership.updated": {
+        const memberData = event.data as any;
+        await ctx.runMutation(internal.organizations.updateUserOrgMembership, {
+          clerkUserId: memberData.public_user_data?.user_id,
+          clerkOrgId: memberData.organization?.id,
+          role: memberData.role,
+        });
+        break;
+      }
+
+      case "organizationMembership.deleted": {
+        const memberData = event.data as any;
+        await ctx.runMutation(internal.organizations.updateUserOrgMembership, {
+          clerkUserId: memberData.public_user_data?.user_id,
+          clerkOrgId: undefined, // Remove org association
+          role: undefined,
+        });
+        break;
+      }
+
       default:
         console.log("Ignored webhook event", (event as any).type);
     }
