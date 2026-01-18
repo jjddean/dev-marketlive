@@ -11,7 +11,7 @@ import {
     ShieldCheck,
     Ship
 } from 'lucide-react';
-import { UserButton } from '@clerk/clerk-react';
+import { UserButton, OrganizationSwitcher } from '@clerk/clerk-react';
 
 const AdminSidebar = () => {
     const location = useLocation();
@@ -58,14 +58,26 @@ const AdminSidebar = () => {
             </div>
 
             {/* User Footer */}
-            <div className="p-4 border-t border-slate-800">
+            <div className="p-4 border-t border-slate-800 space-y-3">
+                {/* Organization Switcher for Admins */}
+                <OrganizationSwitcher
+                    hidePersonal={true}
+                    afterCreateOrganizationUrl="/admin"
+                    afterSelectOrganizationUrl="/admin"
+                    appearance={{
+                        elements: {
+                            rootBox: "w-full",
+                            organizationSwitcherTrigger: "w-full justify-between bg-slate-800 text-white border-slate-700 hover:bg-slate-700"
+                        }
+                    }}
+                />
                 <div className="flex items-center space-x-3 bg-slate-800/50 p-2 rounded-lg">
                     <div className="bg-white rounded-full p-0.5">
                         <UserButton afterSignOutUrl="/" />
                     </div>
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-white truncate">Administrator</p>
-                        <p className="text-xs text-slate-500 truncate">admin@marketlive.com</p>
+                        <p className="text-xs text-slate-500 truncate">Platform Admin</p>
                     </div>
                 </div>
             </div>

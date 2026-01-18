@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { SignedIn, SignedOut, UserButton } from '@clerk/clerk-react';
+import { SignedIn, SignedOut, UserButton, OrganizationSwitcher } from '@clerk/clerk-react';
 import AuthButtons from './AuthButtons';
 import NotificationCenter from './ui/notification-center';
 
@@ -124,6 +124,17 @@ const Navbar: React.FC = () => {
         <div className="auth-section">
           <SignedIn>
             <div className="flex items-center space-x-4">
+              <OrganizationSwitcher
+                hidePersonal={false}
+                afterCreateOrganizationUrl="/dashboard"
+                afterSelectOrganizationUrl="/dashboard"
+                appearance={{
+                  elements: {
+                    rootBox: "flex items-center",
+                    organizationSwitcherTrigger: "text-sm"
+                  }
+                }}
+              />
               <NotificationCenter />
               <UserButton />
             </div>
