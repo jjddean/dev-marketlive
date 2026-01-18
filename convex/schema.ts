@@ -134,7 +134,7 @@ export default defineSchema({
     bookingId: v.string(),
     quoteId: v.string(),
     carrierQuoteId: v.string(),
-    status: v.string(), // "confirmed", "in_transit", "delivered", "cancelled"
+    status: v.string(), // "pending", "pending_approval", "approved", "confirmed", "in_transit", "delivered", "cancelled", "rejected"
     customerDetails: v.object({
       name: v.string(),
       email: v.string(),
@@ -157,6 +157,12 @@ export default defineSchema({
     }),
     specialInstructions: v.optional(v.string()),
     notes: v.optional(v.string()),
+    // Approval workflow fields
+    requiresApproval: v.optional(v.boolean()), // True if needs platform approval
+    approvalStatus: v.optional(v.string()), // "pending", "approved", "rejected"
+    approvedBy: v.optional(v.string()), // Clerk user ID of approver
+    approvedAt: v.optional(v.number()), // Timestamp of approval
+    rejectionReason: v.optional(v.string()), // Reason if rejected
     userId: v.optional(v.id("users")),
     orgId: v.optional(v.string()), // Multi-tenancy
     createdAt: v.number(),
@@ -164,7 +170,8 @@ export default defineSchema({
   }).index("byUserId", ["userId"])
     .index("byBookingId", ["bookingId"])
     .index("byQuoteId", ["quoteId"])
-    .index("byOrgId", ["orgId"]),
+    .index("byOrgId", ["orgId"])
+    .index("byApprovalStatus", ["approvalStatus"]),
 
   documents: defineTable({
     type: v.string(), // "bill_of_lading", "air_waybill", "commercial_invoice"

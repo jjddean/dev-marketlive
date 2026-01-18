@@ -267,3 +267,117 @@ export const updateBookingStatus = mutation({
     return booking._id;
   },
 });
+
+// Admin: Approve a booking that requires platform approval
+export const approveBooking = mutation({
+  args: {
+    bookingId: v.string(),
+    notes: v.optional(v.string()),
+  },
+  handler: async (ctx, { bookingId, notes }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const currentUser = await ctx.db
+      .query("users")
+      .withIndex("byExternalId", (q) => q.eq("externalId", identity.subject))
+      .unique();
+
+    if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "platform:superadmin")) {
+      throw new Error("Only admins can approve bookings");
+    }
+
+    const booking = await ctx.db
+      .query("bookings")
+      .withIndex("byBookingId", (q) => q.eq("bookingId", bookingId))
+      .unique();
+
+    if (!booking) throw new Error("Booking not found");
+
+    await ctx.db.patch(booking._id, {
+      status: "approved",
+      approvalStatus: "approved",
+      approvedBy: identity.subject,
+      approvedAt: Date.now(),
+      notes: notes || booking.notes,
+      updatedAt: Date.now(),
+    });
+
+    await ctx.scheduler.runAfter(0, internal.email.sendEmail, {
+      to: booking.customerDetails.email,
+      subject: `Booking Approved: ${booking.bookingId}`,
+      html: `<div style="font-family: sans-serif;"><h1 style="color: #22c55e;">Booking Approved!</h1><p>Your booking ${booking.bookingId} has been approved.</p></div>`
+    });
+
+    return { success: true, bookingId };
+  },
+});
+
+// Admin: Reject a booking
+export const rejectBooking = mutation({
+  args: {
+    bookingId: v.string(),
+    reason: v.string(),
+  },
+  handler: async (ctx, { bookingId, reason }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const currentUser = await ctx.db
+      .query("users")
+      .withIndex("byExternalId", (q) => q.eq("externalId", identity.subject))
+      .unique();
+
+    if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "platform:superadmin")) {
+      throw new Error("Only admins can reject bookings");
+    }
+
+    const booking = await ctx.db
+      .query("bookings")
+      .withIndex("byBookingId", (q) => q.eq("bookingId", bookingId))
+      .unique();
+
+    if (!booking) throw new Error("Booking not found");
+
+    await ctx.db.patch(booking._id, {
+      status: "rejected",
+      approvalStatus: "rejected",
+      rejectionReason: reason,
+      approvedBy: identity.subject,
+      approvedAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    await ctx.scheduler.runAfter(0, internal.email.sendEmail, {
+      to: booking.customerDetails.email,
+      subject: `Booking Update: ${booking.bookingId}`,
+      html: `<div style="font-family: sans-serif;"><h1 style="color: #ef4444;">Booking Could Not Be Processed</h1><p>Reason: ${reason}</p></div>`
+    });
+
+    return { success: true, bookingId };
+  },
+});
+
+// Query: Get bookings pending approval
+export const listPendingApprovals = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+
+    const currentUser = await ctx.db
+      .query("users")
+      .withIndex("byExternalId", (q) => q.eq("externalId", identity.subject))
+      .unique();
+
+    if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "platform:superadmin")) {
+      return [];
+    }
+
+    return await ctx.db
+      .query("bookings")
+      .withIndex("byApprovalStatus", (q) => q.eq("approvalStatus", "pending"))
+      .order("desc")
+      .collect();
+  },
+});
