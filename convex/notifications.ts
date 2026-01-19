@@ -1,4 +1,5 @@
 import { mutation, query } from "./_generated/server";
+import type { MutationCtx } from "./_generated/server";
 import { v } from "convex/values";
 
 export const list = query({
@@ -73,7 +74,7 @@ export const markAllRead = mutation({
 });
 
 // Helper for other mutations to call internally
-import { MutationCtx } from "./_generated/server";
+// Helper for other mutations to call internally
 export async function createNotificationHelper(
     ctx: MutationCtx,
     userId: string,
