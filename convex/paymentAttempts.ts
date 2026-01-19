@@ -2,6 +2,7 @@ import { internalMutation, query } from "./_generated/server";
 import type { QueryCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { paymentAttemptDataValidator } from "./paymentAttemptTypes";
+import { createNotificationHelper } from "./notifications";
 
 async function userByExternalId(ctx: QueryCtx, externalId: string) {
   return await ctx.db
@@ -36,6 +37,17 @@ export const savePaymentAttempt = internalMutation({
     } else {
       // Create new payment attempt
       await ctx.db.insert("paymentAttempts", paymentAttemptRecord);
+    }
+
+    // Notify if Paid
+    if ((paymentAttemptData.status === 'succeeded' || paymentAttemptData.status === 'paid') && user) {
+      await createNotificationHelper(ctx, user.externalId, {
+        title: 'Payment Received',
+        message: `Payment of ${paymentAttemptData.totals.grand_total.amount_formatted} received.`,
+        type: 'payment',
+        priority: 'medium',
+        actionUrl: '/payments'
+      });
     }
 
     return null;

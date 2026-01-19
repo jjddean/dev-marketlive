@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import MediaCardHeader from '@/components/ui/media-card-header';
 import DataTable from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
@@ -33,8 +33,37 @@ import { toast } from 'sonner';
 
 const DocumentsPage = () => {
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [activeTab, setActiveTab] = useState('documents');
     const [docTypeFilter, setDocTypeFilter] = useState('all');
+
+    // Notifications
+    const createNotification = useMutation(api.notifications.create);
+
+    // Check for DocuSign Return
+    useEffect(() => {
+        if (searchParams.get('event') === 'signing_complete') {
+            toast.success("Document Signed Successfully!", {
+                duration: 5000,
+                icon: '✍️'
+            });
+
+            // Create Persistent Notification
+            createNotification({
+                title: 'Document Signed',
+                message: 'Your document has been successfully signed and processed.',
+                type: 'document',
+                priority: 'medium',
+                actionUrl: '/documents'
+            });
+
+            // Clean up URL
+            setSearchParams(params => {
+                params.delete('event');
+                return params;
+            });
+        }
+    }, [searchParams, setSearchParams, createNotification]);
 
     // Live documents from Convex
     const liveDocuments = useQuery(api.documents.listMyDocuments, {
@@ -126,6 +155,14 @@ const DocumentsPage = () => {
             setSendOpen(false);
             setRecipientName('');
             setRecipientEmail('');
+
+            // NEW: Embedded Signing Redirect
+            if (result.signingUrl) {
+                toast.info("Redirecting to Signature Page...");
+                setTimeout(() => {
+                    window.location.href = result.signingUrl;
+                }, 1000);
+            }
         } catch (e: any) {
             console.error("DOCUSIGN ERROR:", e);
             toast.error(`DocuSign Failed: ${e.message || "Unknown Error"}`);
@@ -299,7 +336,6 @@ const DocumentsPage = () => {
                         <SmartUploadButton onParse={async (data) => {
                             setAutofillData(data);
                             setCreateOpen(true);
-                            toast.success("Form Auto-Filled by AI!");
                         }} />
 
                         <Button variant="outline" onClick={() => {
@@ -573,42 +609,51 @@ function SmartUploadButton({ onParse }: { onParse: (data: any) => void }) {
         if (!file) return;
 
         console.log("File selected:", file.name);
-        toast.info("Starting Smart Upload..."); // DEBUG: Explicit start message
+        const toastId = toast.loading("🤖 AI is reading your document...");
         setAnalyzing(true);
-        toast.info("🤖 AI is reading your document...");
 
         try {
             // 1. Try Local Ollama First
             try {
                 const { askOllama, FREIGHT_PROMPT } = await import('@/lib/ollama');
-                toast.loading("Contacting Local Ollama...", { id: 'ollama-load' });
 
                 const jsonStr = await askOllama(FREIGHT_PROMPT + file.name, "llama3");
                 const result = JSON.parse(jsonStr);
 
-                toast.dismiss('ollama-load');
+                toast.dismiss(toastId);
                 toast.success("Processed by Local Llama 3!");
                 onParse(result);
                 return;
             } catch (ollamaErr: any) {
                 console.warn("Ollama failed, falling back to basic mock:", ollamaErr);
-                // toast.error(`Ollama Error: ${ollamaErr.message}`); // SILENCED
-                toast.dismiss('ollama-load'); // <-- Restored this so it cleans up
-                // Proceed to fallback
+                // Silent fallback
             }
 
-            // 2. Fallback to Cloud Mock
+            // 2. Fallback to Cloud Mock/Real AI
 
+            // Read file as base64
+            const fileData = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result as string);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
 
-            // 2. Fallback to Cloud Mock
             const result = await parseDocument({
-                fileData: "base64-mock",
+                fileData: fileData,
                 fileName: file.name
             });
             onParse(result);
-            toast.success("Processed by Cloud AI (Mock)");
+
+            toast.dismiss(toastId);
+            if (result.confidence > 0.8) {
+                toast.success(`Data extracted for ${result.data.shipper.name}`);
+            } else {
+                toast.warning("AI confidence low - please verify fields");
+            }
 
         } catch (err: any) {
+            toast.dismiss(toastId);
             toast.error(`Cloud AI Failed: ${err.message}`);
             console.error(err);
         } finally {

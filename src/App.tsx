@@ -68,11 +68,15 @@ function Layout({ children }: LayoutProps) {
     }
     console.log("MARKET LIVE: Version 8080");
   }, []);
+  const isClientApp = [
+    '/dashboard', '/shipments', '/bookings', '/quotes',
+    '/payments', '/documents', '/compliance', '/reports', '/account'
+  ].some(path => location.pathname.startsWith(path));
 
   return (
     <>
-      {!isAdmin && <Navbar />}
-      {!isAdmin && <MobileNavigation />}
+      {!isAdmin && !isClientApp && <Navbar />}
+      {!isAdmin && !isClientApp && <MobileNavigation />}
       <AIAssistant />
       <Toaster richColors position="bottom-right" style={{ zIndex: 99999 }} />
       <main className="min-h-screen">{children}</main>

@@ -1,6 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
+import { createNotificationHelper } from "./notifications";
 
 export const createBooking = mutation({
   args: {
@@ -157,6 +158,17 @@ export const createBooking = mutation({
       `
     });
 
+    // Generate Notification
+    if (identity?.subject) {
+      await createNotificationHelper(ctx, identity.subject, {
+        title: 'Booking Created',
+        message: `Booking ${bookingId} has been successfully submitted.`,
+        type: 'system',
+        priority: 'medium',
+        actionUrl: '/bookings'
+      });
+    }
+
     return { bookingId, docId };
   },
 });
@@ -309,6 +321,20 @@ export const approveBooking = mutation({
       html: `<div style="font-family: sans-serif;"><h1 style="color: #22c55e;">Booking Approved!</h1><p>Your booking ${booking.bookingId} has been approved.</p></div>`
     });
 
+    // Notify User
+    if (booking.userId) {
+      const user = await ctx.db.get(booking.userId);
+      if (user) {
+        await createNotificationHelper(ctx, user.externalId, {
+          title: 'Booking Approved',
+          message: `Your booking ${booking.bookingId} has been approved and is ready for processing.`,
+          type: 'shipment',
+          priority: 'high',
+          actionUrl: '/bookings'
+        });
+      }
+    }
+
     return { success: true, bookingId };
   },
 });
@@ -353,6 +379,20 @@ export const rejectBooking = mutation({
       subject: `Booking Update: ${booking.bookingId}`,
       html: `<div style="font-family: sans-serif;"><h1 style="color: #ef4444;">Booking Could Not Be Processed</h1><p>Reason: ${reason}</p></div>`
     });
+
+    // Notify User
+    if (booking.userId) {
+      const user = await ctx.db.get(booking.userId);
+      if (user) {
+        await createNotificationHelper(ctx, user.externalId, {
+          title: 'Booking Rejected',
+          message: `Your booking ${booking.bookingId} was rejected: ${reason}`,
+          type: 'alert',
+          priority: 'high',
+          actionUrl: '/bookings'
+        });
+      }
+    }
 
     return { success: true, bookingId };
   },

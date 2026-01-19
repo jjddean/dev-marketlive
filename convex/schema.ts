@@ -291,4 +291,16 @@ export default defineSchema({
     .index("byUserId", ["userId"])
     .index("byOrgId", ["orgId"])
     .index("byTimestamp", ["timestamp"]),
+
+  notifications: defineTable({
+    userId: v.optional(v.string()), // Clerk User ID
+    title: v.string(),
+    message: v.string(),
+    type: v.string(), // shipment, payment, document, system
+    priority: v.string(), // low, medium, high
+    read: v.boolean(),
+    actionUrl: v.optional(v.string()),
+    createdAt: v.number(),
+  }).index("byUserId", ["userId"])
+    .index("byRead", ["read"]),
 }); 

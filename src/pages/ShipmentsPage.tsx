@@ -316,8 +316,8 @@ const ShipmentsPage = () => {
     const email = prompt("Enter email address to receive the report:", "jason@example.com");
     if (!email) return;
 
+    const toastId = toast.loading(`Sending report to ${email}...`);
     setEmailing(true);
-    toast.info(`Sending report to ${email}...`);
 
     const seed = selectedShipment.id.split('').reduce((a: any, c: any) => a + c.charCodeAt(0), 0);
     const riskScore = (seed % 100);
@@ -328,9 +328,11 @@ const ShipmentsPage = () => {
         email,
         riskScore
       });
+      toast.dismiss(toastId);
       toast.success(`Report sent successfully!`);
     } catch (e: any) {
-      toast.error("Failed to send report. check console.");
+      toast.dismiss(toastId);
+      toast.error("Failed to send report");
       console.error(e);
     } finally {
       setEmailing(false);
@@ -486,6 +488,16 @@ const ShipmentsPage = () => {
                   <span className="text-gray-500 block">ETA</span>
                   <span className="font-medium text-gray-900">{selectedShipment.eta}</span>
                 </div>
+              </div>
+
+              {/* Restored Map Section */}
+              <div className="h-48 w-full rounded-lg overflow-hidden border border-gray-200">
+                <LiveVesselMap
+                  shipmentId={selectedShipment.id}
+                  origin={selectedShipment.origin}
+                  destination={selectedShipment.destination}
+                  progress={selectedShipment.progress || 45}
+                />
               </div>
 
               {/* AI Risk Analysis Widget */}

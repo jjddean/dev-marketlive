@@ -1,6 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
+import { createNotificationHelper } from "./notifications";
 
 export const upsertShipment = mutation({
   args: {
@@ -75,6 +76,20 @@ export const upsertShipment = mutation({
           newStatus: tracking.status,
         });
       }
+
+      // Notify User of Status Change
+      if (oldStatus !== tracking.status && existing.userId) {
+        const userDoc = await ctx.db.get(existing.userId);
+        if (userDoc) {
+          await createNotificationHelper(ctx, userDoc.externalId, {
+            title: 'Shipment Update',
+            message: `Shipment ${shipmentId} is now ${tracking.status}.`,
+            type: 'shipment',
+            priority: 'medium',
+            actionUrl: '/shipments'
+          });
+        }
+      }
     } else {
       shipmentDocId = await ctx.db.insert("shipments", {
         shipmentId,
@@ -89,6 +104,17 @@ export const upsertShipment = mutation({
         createdAt: Date.now(),
         userId: currentUserId as any,
       } as any);
+
+      // Notify User of Creation
+      if (identity && identity.subject) {
+        await createNotificationHelper(ctx, identity.subject, {
+          title: 'Shipment Created',
+          message: `New shipment ${shipmentId} created successfully.`,
+          type: 'shipment',
+          priority: 'medium',
+          actionUrl: '/shipments'
+        });
+      }
     }
 
     // Replace events by appending new ones

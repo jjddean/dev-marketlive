@@ -2,14 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 
 interface Notification {
-  id: string;
+  _id: string;
+  id: string; // Add mapped ID for frontend convenience
   title: string;
   message: string;
-  type: 'shipment' | 'payment' | 'document' | 'system' | 'alert';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  timestamp: string;
+  type: string;
+  priority: string;
+  createdAt: number;
   read: boolean;
   actionUrl?: string;
   actionText?: string;
@@ -20,97 +23,26 @@ interface NotificationCenterProps {
 }
 
 const NotificationCenter: React.FC<NotificationCenterProps> = ({ className }) => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState<'all' | 'unread' | 'urgent'>('all');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Mock initial notifications
-    const mockNotifications: Notification[] = [
-      {
-        id: '1',
-        title: 'Shipment Delayed',
-        message: 'SH-2024-145 has been delayed due to port congestion. New ETA: Aug 6, 2024',
-        type: 'shipment',
-        priority: 'high',
-        timestamp: '2024-08-01T14:30:00Z',
-        read: false,
-        actionUrl: '/shipments',
-        actionText: 'View Details'
-      },
-      {
-        id: '2',
-        title: 'Payment Received',
-        message: 'Payment of £12,450 received for invoice INV-2024-089',
-        type: 'payment',
-        priority: 'medium',
-        timestamp: '2024-08-01T13:15:00Z',
-        read: false,
-        actionUrl: '/payments',
-        actionText: 'View Invoice'
-      },
-      {
-        id: '3',
-        title: 'Document Required',
-        message: 'Commercial invoice needed for SH-2024-156 customs clearance',
-        type: 'document',
-        priority: 'urgent',
-        timestamp: '2024-08-01T12:45:00Z',
-        read: false,
-        actionUrl: '/compliance',
-        actionText: 'Upload Document'
-      },
-      {
-        id: '4',
-        title: 'Customs Cleared',
-        message: 'SH-2024-132 has successfully cleared customs in Hamburg',
-        type: 'shipment',
-        priority: 'low',
-        timestamp: '2024-08-01T11:20:00Z',
-        read: true,
-        actionUrl: '/shipments',
-        actionText: 'Track Shipment'
-      },
-      {
-        id: '5',
-        title: 'System Maintenance',
-        message: 'Scheduled maintenance window: Aug 3, 2024 02:00-04:00 UTC',
-        type: 'system',
-        priority: 'medium',
-        timestamp: '2024-08-01T10:00:00Z',
-        read: true
-      }
-    ];
+  // Real Data
+  const rawNotifications = useQuery(api.notifications.list);
+  const markReadMutation = useMutation(api.notifications.markRead);
+  const markAllReadMutation = useMutation(api.notifications.markAllRead);
 
-    setNotifications(mockNotifications);
+  // Normalize data format
+  const notifications = (rawNotifications || []).map((n: any) => ({
+    ...n,
+    id: n._id, // map _id to id for compatibility
+    timestamp: new Date(n.createdAt).toISOString()
+  }));
 
-    // Simulate real-time notifications
-    const interval = setInterval(() => {
-      if (Math.random() > 0.7) {
-        const newNotification: Notification = {
-          id: Date.now().toString(),
-          title: 'Live Update',
-          message: `Shipment SH-2024-${Math.floor(Math.random() * 999)} location updated`,
-          type: 'shipment',
-          priority: 'low',
-          timestamp: new Date().toISOString(),
-          read: false,
-          actionUrl: '/shipments',
-          actionText: 'View Shipments'
-        };
+  const unreadCount = notifications.filter((n: any) => !n.read).length;
+  const urgentCount = notifications.filter((n: any) => n.priority === 'urgent' && !n.read).length;
 
-        setNotifications(prev => [newNotification, ...prev.slice(0, 9)]);
-      }
-    }, 15000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const unreadCount = notifications.filter(n => !n.read).length;
-  const urgentCount = notifications.filter(n => n.priority === 'urgent' && !n.read).length;
-
-  const filteredNotifications = notifications.filter(notification => {
+  const filteredNotifications = notifications.filter((notification: any) => {
     switch (filter) {
       case 'unread':
         return !notification.read;
@@ -122,13 +54,11 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ className }) =>
   });
 
   const markAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
-    );
+    markReadMutation({ notificationId: id as any });
   };
 
   const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    markAllReadMutation();
   };
 
   const getNotificationIcon = (type: string) => {
@@ -272,7 +202,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ className }) =>
                 <p>No notifications</p>
               </div>
             ) : (
-              filteredNotifications.map((notification) => (
+              filteredNotifications.map((notification: any) => (
                 <div
                   key={notification.id}
                   className={cn(

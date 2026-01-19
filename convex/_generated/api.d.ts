@@ -20,6 +20,7 @@ import type * as docusign from "../docusign.js";
 import type * as email from "../email.js";
 import type * as geo from "../geo.js";
 import type * as http from "../http.js";
+import type * as notifications from "../notifications.js";
 import type * as organizations from "../organizations.js";
 import type * as paymentAttemptTypes from "../paymentAttemptTypes.js";
 import type * as paymentAttempts from "../paymentAttempts.js";
@@ -55,6 +56,7 @@ declare const fullApi: ApiFromModules<{
   email: typeof email;
   geo: typeof geo;
   http: typeof http;
+  notifications: typeof notifications;
   organizations: typeof organizations;
   paymentAttemptTypes: typeof paymentAttemptTypes;
   paymentAttempts: typeof paymentAttempts;

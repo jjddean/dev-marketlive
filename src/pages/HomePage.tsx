@@ -7,17 +7,27 @@ import QuoteRequestForm from '@/components/forms/QuoteRequestForm';
 
 import { toast } from 'sonner';
 
+import { VisualQuoteInput } from '@/components/home/VisualQuoteInput';
+
 const HomePage = () => {
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [searchParams, setSearchParams] = useState({ origin: '', destination: '' });
+
+  const handleVisualSearch = (data: { origin: string; destination: string }) => {
+    setSearchParams(data);
+    setShowResults(true);
+    toast.success(`Found 3 routes from ${data.origin} to ${data.destination}`);
+
+    // Auto-scroll to results
+    setTimeout(() => {
+      document.getElementById('quote-results')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
 
   const handleQuoteSubmit = (data: any) => {
-    // Check if the user is authenticated? Ideally.
-    // But for now, just close the modal as requested.
     setIsQuoteModalOpen(false);
     toast.success("Quote request submitted successfully!");
-
-    // Redirect logic could go here if we wanted to be fancy, but simple is best for now.
-    // If we have a selected rate, we might want to inform them.
     if (data.selectedRate) {
       toast.success(`Booking confirmed with ${data.selectedRate.carrier}!`);
     }
@@ -28,28 +38,65 @@ const HomePage = () => {
   };
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Section with Media Card */}
-      <MediaCardHeader
-        title="Professional Freight Forwarding"
-        description="Streamlined global logistics with instant quotes, digital documentation, and real-time tracking for complex shipping lanes."
-        backgroundImage="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
-        overlayOpacity={0.4}
-        className="h-[500px] lg:h-[600px]"
-      >
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Button
-            size="lg"
-            className="bg-secondary hover:bg-secondary/90"
-            onClick={() => setIsQuoteModalOpen(true)}
-          >
-            Get Instant Quote
-          </Button>
-          <Button asChild variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-primary-800 bg-white/10 backdrop-blur-sm">
-            <Link to="/platform">View Platform</Link>
-          </Button>
+    <div className="min-h-screen bg-white">
+      {/* 1. Interactive Visual Quote Hero */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <VisualQuoteInput onSearch={handleVisualSearch} />
+      </div>
+
+      {/* 2. Results Section (Conditionally Rendered) */}
+      {showResults && (
+        <div id="quote-results" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Best Routes Found</h2>
+            <Button variant="outline" onClick={() => setShowResults(false)}>Clear Search</Button>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {/* Option 1: Sea (Cheapest) */}
+            <div className="border rounded-xl p-6 hover:shadow-lg transition-all cursor-pointer border-l-4 border-l-emerald-500 bg-white group">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-3 bg-emerald-50 rounded-lg group-hover:bg-emerald-100 transition-colors">
+                  <span className="text-2xl">🚢</span>
+                </div>
+                <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-2 py-1 rounded-full">Best Value</span>
+              </div>
+              <h3 className="font-bold text-lg mb-1">Ocean Freight</h3>
+              <p className="text-sm text-gray-500 mb-4">Maersk Line • 35 Days</p>
+              <div className="text-2xl font-bold text-gray-900 mb-4">$1,240 <span className="text-sm font-normal text-gray-500">/ container</span></div>
+              <Button className="w-full" onClick={() => setIsQuoteModalOpen(true)}>Book Layout</Button>
+            </div>
+
+            {/* Option 2: Air (Fastest) */}
+            <div className="border rounded-xl p-6 hover:shadow-lg transition-all cursor-pointer border-l-4 border-l-blue-500 bg-white group">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-3 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
+                  <span className="text-2xl">✈️</span>
+                </div>
+                <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded-full">Fastest</span>
+              </div>
+              <h3 className="font-bold text-lg mb-1">Air Freight</h3>
+              <p className="text-sm text-gray-500 mb-4">DHL Aviation • 3 Days</p>
+              <div className="text-2xl font-bold text-gray-900 mb-4">$4,850 <span className="text-sm font-normal text-gray-500">/ 500kg</span></div>
+              <Button className="w-full variant-outline border-blue-200 text-blue-700 hover:bg-blue-50" onClick={() => setIsQuoteModalOpen(true)}>Book Express</Button>
+            </div>
+
+            {/* Option 3: Rail/Mixed (Balanced) */}
+            <div className="border rounded-xl p-6 hover:shadow-lg transition-all cursor-pointer border-l-4 border-l-purple-500 bg-white group">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-3 bg-purple-50 rounded-lg group-hover:bg-purple-100 transition-colors">
+                  <span className="text-2xl">🚆</span>
+                </div>
+                <span className="bg-purple-100 text-purple-800 text-xs font-bold px-2 py-1 rounded-full">Eco Choice</span>
+              </div>
+              <h3 className="font-bold text-lg mb-1">Rail Freight</h3>
+              <p className="text-sm text-gray-500 mb-4">China Rec • 18 Days</p>
+              <div className="text-2xl font-bold text-gray-900 mb-4">$2,100 <span className="text-sm font-normal text-gray-500">/ container</span></div>
+              <Button className="w-full variant-ghost hover:bg-purple-50 text-purple-700" onClick={() => setIsQuoteModalOpen(true)}>Book Green</Button>
+            </div>
+          </div>
         </div>
-      </MediaCardHeader>
+      )}
 
       {/* Core Services Section */}
       <div className="py-16 bg-gray-50">
@@ -95,39 +142,20 @@ const HomePage = () => {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* CTA Section */}
-      <div className="py-16 bg-white">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-primary-800 mb-4">
-            Ready to Streamline Your Global Logistics?
-          </h2>
-          <p className="text-lg text-gray-600 mb-8">
-            Join businesses worldwide who trust MarketLive for their freight forwarding needs.
-          </p>
-          <Button
-            size="lg"
-            className="bg-primary hover:bg-primary/90"
-            onClick={() => setIsQuoteModalOpen(true)}
-          >
-            Start Your Quote
-          </Button>
-        </div>
+        {/* Quote Request Modal */}
+        <Modal
+          isOpen={isQuoteModalOpen}
+          onClose={handleCloseModal}
+          title="Request Freight Quote"
+          size="xl"
+        >
+          <QuoteRequestForm
+            onSubmit={handleQuoteSubmit}
+            onCancel={handleCloseModal}
+          />
+        </Modal>
       </div>
-
-      {/* Quote Request Modal */}
-      <Modal
-        isOpen={isQuoteModalOpen}
-        onClose={handleCloseModal}
-        title="Request Freight Quote"
-        size="xl"
-      >
-        <QuoteRequestForm
-          onSubmit={handleQuoteSubmit}
-          onCancel={handleCloseModal}
-        />
-      </Modal>
     </div>
   );
 };
