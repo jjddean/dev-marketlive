@@ -121,8 +121,6 @@ const CarrierIntegrationPage: React.FC = () => {
           </div>
         </div>
       </div>
-
-      <Footer />
     </div>
   );
 };

@@ -187,28 +187,28 @@ const DashboardPage = () => {
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
               <div className="space-y-3">
-                <Button asChild variant="outline" className="w-full justify-start">
-                  <Link to="/quotes" state={{ mode: 'create' }}>
-                    <span className="mr-2">📋</span>
-                    New Quote
+                <Button asChild variant="outline" className="w-full justify-start h-auto whitespace-normal">
+                  <Link to="/quotes" state={{ mode: 'create' }} className="flex items-center py-2">
+                    <span className="mr-2 shrink-0">📋</span>
+                    <span className="text-left">New Quote</span>
                   </Link>
                 </Button>
-                <Button asChild variant="outline" className="w-full justify-start">
-                  <Link to="/shipments">
-                    <span className="mr-2">🚢</span>
-                    Track Shipment
+                <Button asChild variant="outline" className="w-full justify-start h-auto whitespace-normal">
+                  <Link to="/shipments" className="flex items-center py-2">
+                    <span className="mr-2 shrink-0">🚢</span>
+                    <span className="text-left">Track Shipment</span>
                   </Link>
                 </Button>
-                <Button asChild variant="outline" className="w-full justify-start">
-                  <Link to="/compliance">
-                    <span className="mr-2">📄</span>
-                    Upload Document
+                <Button asChild variant="outline" className="w-full justify-start h-auto whitespace-normal">
+                  <Link to="/compliance" className="flex items-center py-2">
+                    <span className="mr-2 shrink-0">📄</span>
+                    <span className="text-left">Upload Document</span>
                   </Link>
                 </Button>
-                <Button asChild variant="outline" className="w-full justify-start">
-                  <Link to="/admin/carriers">
-                    <span className="mr-2">🔗</span>
-                    Carrier APIs
+                <Button asChild variant="outline" className="w-full justify-start h-auto whitespace-normal">
+                  <Link to="/admin/carriers" className="flex items-center py-2">
+                    <span className="mr-2 shrink-0">🔗</span>
+                    <span className="text-left">Carrier APIs</span>
                   </Link>
                 </Button>
                 <SimulateTrafficButton />
@@ -272,14 +272,13 @@ const DashboardPage = () => {
           {/* Global Shipment Map */}
           <div className="mt-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Global Shipment Tracking</h2>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden" style={{ height: '500px' }}>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden relative z-0" style={{ height: '500px' }}>
               <ShipmentMap className="w-full h-full" />
             </div>
           </div>
         </div>
       </div>
 
-      <Footer />
     </div>
   );
 };
@@ -304,11 +303,11 @@ function SimulateTrafficButton() {
     <Button
       onClick={handleRun}
       variant="outline"
-      className="w-full justify-start text-blue-600 border-blue-200 hover:bg-blue-50"
+      className="w-full justify-start text-blue-600 border-blue-200 hover:bg-blue-50 h-auto whitespace-normal py-2"
       disabled={running}
     >
-      <Play className={`mr-2 h-4 w-4 ${running ? 'animate-spin' : ''}`} />
-      {running ? "Simulating..." : "Simulate Traffic"}
+      <Play className={`mr-2 h-4 w-4 shrink-0 ${running ? 'animate-spin' : ''}`} />
+      <span className="text-left">{running ? "Simulating..." : "Simulate Traffic"}</span>
     </Button>
   )
 }

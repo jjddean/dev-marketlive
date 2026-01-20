@@ -457,8 +457,6 @@ const ShipmentsPage = () => {
         )}
       </div>
 
-      <Footer />
-
       {/* Shipment Details & Risk Analysis Sheet */}
       <Sheet open={!!selectedShipment} onOpenChange={(open) => !open && setSelectedShipment(null)}>
         <SheetContent side="right" className="w-[400px] sm:w-[540px] overflow-y-auto p-6">

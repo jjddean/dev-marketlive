@@ -181,7 +181,6 @@ const CompliancePage = () => {
           </div>
         </div>
       </div>
-      <Footer />
     </div>
   );
 };

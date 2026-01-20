@@ -231,9 +231,10 @@ const ClientBookingsPage = () => {
                 )}
             </div>
 
-            <Footer />
         </div>
     );
 };
 
 export default ClientBookingsPage;
+
+

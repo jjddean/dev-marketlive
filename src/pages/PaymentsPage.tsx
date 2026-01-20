@@ -297,7 +297,6 @@ const PaymentsPage = () => {
         </DialogContent>
       </Dialog>
 
-      <Footer />
     </div>
   );
 };

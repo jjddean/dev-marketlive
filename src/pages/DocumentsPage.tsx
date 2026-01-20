@@ -393,7 +393,8 @@ const DocumentsPage = () => {
                 </div>
 
             </div>
-            <Footer />
+
+
 
             {/* --- DRAWERS & SHEETS --- */}
 

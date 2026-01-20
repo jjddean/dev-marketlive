@@ -83,8 +83,8 @@ export function ShipmentMap({ className = '' }: ShipmentMapProps) {
         : [20, 0] as [number, number];
 
     return (
-        <div className={`h-full w-full ${className}`}>
-            <MapContainer center={centerLab} zoom={2} style={{ height: '100%', width: '100%' }}>
+        <div className={`h-full w-full relative z-0 ${className}`}>
+            <MapContainer center={centerLab} zoom={2} style={{ height: '100%', width: '100%', position: 'relative', zIndex: 0 }}>
                 <TileLayer
                     url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
@@ -100,7 +100,7 @@ export function ShipmentMap({ className = '' }: ShipmentMapProps) {
                                 <div className="font-semibold mb-1">{shipment.id}</div>
                                 <div className="text-gray-600 text-xs mb-1">{shipment.label}</div>
                                 <div className={`text-xs font-medium ${shipment.status === 'Delivered' ? 'text-green-600' :
-                                        shipment.status === 'In Transit' ? 'text-blue-600' : 'text-orange-600'
+                                    shipment.status === 'In Transit' ? 'text-blue-600' : 'text-orange-600'
                                     }`}>
                                     {shipment.status}
                                 </div>

@@ -122,21 +122,20 @@ const ApiDocsPage: React.FC = () => {
   const renderMethod = (method: any, index: number) => (
     <div key={index} className="border border-gray-200 rounded-lg p-6 mb-6">
       <div className="flex items-center space-x-3 mb-4">
-        <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-          method.method === 'GET' ? 'bg-green-100 text-green-800' :
+        <span className={`px-3 py-1 text-xs font-medium rounded-full ${method.method === 'GET' ? 'bg-green-100 text-green-800' :
           method.method === 'POST' ? 'bg-blue-100 text-blue-800' :
-          method.method === 'PUT' ? 'bg-yellow-100 text-yellow-800' :
-          'bg-red-100 text-red-800'
-        }`}>
+            method.method === 'PUT' ? 'bg-yellow-100 text-yellow-800' :
+              'bg-red-100 text-red-800'
+          }`}>
           {method.method}
         </span>
         <code className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">
           {method.path}
         </code>
       </div>
-      
+
       <p className="text-gray-700 mb-4">{method.description}</p>
-      
+
       {method.parameters && (
         <div className="mb-4">
           <h4 className="text-sm font-medium text-gray-900 mb-2">Parameters</h4>
@@ -162,7 +161,7 @@ const ApiDocsPage: React.FC = () => {
           </div>
         </div>
       )}
-      
+
       {method.body && (
         <div className="mb-4">
           <h4 className="text-sm font-medium text-gray-900 mb-2">Request Body</h4>
@@ -171,7 +170,7 @@ const ApiDocsPage: React.FC = () => {
           </pre>
         </div>
       )}
-      
+
       <div>
         <h4 className="text-sm font-medium text-gray-900 mb-2">Response</h4>
         <pre className="bg-gray-900 text-green-400 p-4 rounded-lg text-xs overflow-x-auto">
@@ -204,11 +203,10 @@ const ApiDocsPage: React.FC = () => {
                   <button
                     key={key}
                     onClick={() => setActiveEndpoint(key)}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
-                      activeEndpoint === key
-                        ? 'bg-primary text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${activeEndpoint === key
+                      ? 'bg-primary text-white'
+                      : 'text-gray-700 hover:bg-gray-100'
+                      }`}
                   >
                     {endpoint.title}
                   </button>
@@ -252,7 +250,7 @@ const ApiDocsPage: React.FC = () => {
               {/* Code Examples */}
               <div className="mt-8 pt-8 border-t border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Code Examples</h3>
-                
+
                 <div className="space-y-6">
                   <div>
                     <h4 className="text-sm font-medium text-gray-900 mb-2">JavaScript (Fetch)</h4>
@@ -283,8 +281,6 @@ const ApiDocsPage: React.FC = () => {
           </div>
         </div>
       </div>
-
-      <Footer />
     </div>
   );
 };

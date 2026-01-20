@@ -308,8 +308,6 @@ const ReportsPage = () => {
           </div>
         )}
       </div>
-
-      <Footer />
     </div>
   );
 };
