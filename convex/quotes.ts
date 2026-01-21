@@ -17,23 +17,14 @@ export const createQuote = mutation({
       urgency: v.string(),
       additionalServices: v.array(v.string()),
       contactInfo: v.object({ name: v.string(), email: v.string(), phone: v.string(), company: v.string() }),
+      quotes: v.optional(v.array(v.any())), // Accept captured rates
     }),
-    response: v.object({
+    // Response is optional now because it might be generated from request.quotes
+    response: v.optional(v.object({
       quoteId: v.string(),
       status: v.string(),
-      quotes: v.array(v.object({
-        carrierId: v.string(),
-        carrierName: v.string(),
-        serviceType: v.string(),
-        transitTime: v.string(),
-        price: v.object({
-          amount: v.number(),
-          currency: v.string(),
-          breakdown: v.object({ baseRate: v.number(), fuelSurcharge: v.number(), securityFee: v.number(), documentation: v.number() }),
-        }),
-        validUntil: v.string(),
-      })),
-    }),
+      quotes: v.array(v.any()),
+    })),
   },
   handler: async (ctx, { request, response }) => {
     // Link to current user when available (map Clerk subject -> users.externalId)
@@ -47,16 +38,20 @@ export const createQuote = mutation({
       if (user) linkedUserId = user._id as any;
     }
 
+    // Construct quote document
     const quoteDoc: any = {
       ...request,
-      ...response,
+      // Use provided response OR build from request.quotes
+      quotes: response?.quotes || request.quotes || [],
+      quoteId: response?.quoteId || `QT-${Date.now()}`,
+      status: response?.status || "success",
       createdAt: Date.now(),
     };
     if (linkedUserId) quoteDoc.userId = linkedUserId;
 
     const docId = await ctx.db.insert("quotes", quoteDoc);
 
-    return docId;
+    return { quoteId: quoteDoc.quoteId, quotes: quoteDoc.quotes };
   },
 });
 
@@ -74,6 +69,7 @@ export const createInstantQuoteAndBooking = mutation({
       urgency: v.string(),
       additionalServices: v.array(v.string()),
       contactInfo: v.object({ name: v.string(), email: v.string(), phone: v.string(), company: v.string() }),
+      quotes: v.optional(v.array(v.any())), // Accept rates from frontend
     }),
   },
   handler: async (ctx, { request }) => {
@@ -88,9 +84,8 @@ export const createInstantQuoteAndBooking = mutation({
 
     const transitTime = estimateTransitTime(request.origin, request.destination, request.serviceType);
 
-    // We no longer use backend-generated fallback quotes. 
-    // The frontend uses LiveRateComparison (Shippo/ReachShip) for real-time rates.
-    const quotes: any[] = [];
+    // Use provided rates from frontend, or empty array if none
+    const quotes: any[] = request.quotes || [];
 
     // Link to current user when available
     const identity = await ctx.auth.getUserIdentity();

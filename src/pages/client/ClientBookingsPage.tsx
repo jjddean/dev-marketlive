@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import MediaCardHeader from '@/components/ui/media-card-header';
 import DataTable from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
-import Footer from '@/components/layout/Footer';
-import { useQuery } from "convex/react";
+import { useQuery, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import {
     Drawer,
@@ -25,16 +24,24 @@ import {
 } from '@/components/ui/sheet';
 import QuoteRequestForm from '@/components/forms/QuoteRequestForm';
 import { toast } from 'sonner';
+import { useStripeCheckout } from '@/hooks/useStripeCheckout';
 
 const ClientBookingsPage = () => {
     const bookings = useQuery(api.bookings.listMyBookings) || [];
     const [isCreateOpen, setIsCreateOpen] = useState(false);
+    // const createCheckout = useAction(api.billing.createCheckoutSession);
 
     const handleCreateBooking = (data: any) => {
         console.log("New Booking Data:", data);
         toast.success("Booking request submitted successfully!");
         setIsCreateOpen(false);
-        // In a real app, calls mutation here
+    };
+
+    const { startCheckout } = useStripeCheckout();
+
+    const handlePay = (bookingId: string) => {
+        const invoiceId = `INV-${bookingId}`;
+        startCheckout(invoiceId);
     };
 
     const StatusBadge = ({ status }: { status: string }) => {
@@ -42,6 +49,8 @@ const ClientBookingsPage = () => {
             confirmed: 'bg-green-100 text-green-800',
             pending: 'bg-yellow-100 text-yellow-800',
             cancelled: 'bg-red-100 text-red-800',
+            in_transit: 'bg-blue-100 text-blue-800',
+            delivered: 'bg-gray-100 text-gray-800',
         };
         const style = styles[status] || 'bg-gray-100 text-gray-800';
 
@@ -92,6 +101,31 @@ const ClientBookingsPage = () => {
                                         <div>
                                             <span className="block text-gray-500 text-xs">Created</span>
                                             {row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '-'}
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section className="space-y-3">
+                                    <h3 className="text-sm font-semibold text-gray-900 border-b pb-2">Financials</h3>
+                                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 flex items-center justify-between gap-4">
+                                        <div className="shrink-0">
+                                            <div className="font-medium text-gray-900">Total Cost</div>
+                                            <div className="text-xs text-gray-500">Ready for payment</div>
+                                        </div>
+                                        <div className="flex items-center gap-3 justify-end min-w-0">
+                                            <div className="font-bold text-gray-900 text-right leading-tight break-words">
+                                                {row.price
+                                                    ? new Intl.NumberFormat('en-US', { style: 'currency', currency: row.price.currency || 'USD' }).format(row.price.amount)
+                                                    : <span className="text-sm">Calculated<br />at Checkout</span>
+                                                }
+                                            </div>
+                                            <Button
+                                                onClick={() => handlePay(row.bookingId)}
+                                                size="sm"
+                                                className="bg-primary hover:bg-primary/90 text-white shadow-sm h-9 px-4 shrink-0"
+                                            >
+                                                Secure Booking
+                                            </Button>
                                         </div>
                                     </div>
                                 </section>
@@ -218,7 +252,7 @@ const ClientBookingsPage = () => {
                         <h3 className="text-lg font-medium text-gray-900 mb-2">No Bookings Yet</h3>
                         <p className="text-gray-500 mb-6">Create your first shipment booking to get started.</p>
                         <Button onClick={() => setIsCreateOpen(true)}>
-                            Create New Booking
+                            Create Shipment
                         </Button>
                     </div>
                 ) : (
@@ -230,11 +264,8 @@ const ClientBookingsPage = () => {
                     />
                 )}
             </div>
-
         </div>
     );
 };
 
 export default ClientBookingsPage;
-
-

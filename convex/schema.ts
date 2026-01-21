@@ -141,6 +141,7 @@ export default defineSchema({
       phone: v.string(),
       company: v.string(),
     }),
+    paymentStatus: v.optional(v.string()), // "unpaid", "paid", "refunded"
     pickupDetails: v.object({
       address: v.string(),
       date: v.string(),
@@ -157,6 +158,17 @@ export default defineSchema({
     }),
     specialInstructions: v.optional(v.string()),
     notes: v.optional(v.string()),
+    // Price snapshot
+    price: v.optional(v.object({
+      amount: v.number(),
+      currency: v.string(),
+      breakdown: v.optional(v.object({
+        baseRate: v.number(),
+        fuelSurcharge: v.number(),
+        securityFee: v.number(),
+        documentation: v.number(),
+      })),
+    })),
     // Approval workflow fields
     requiresApproval: v.optional(v.boolean()), // True if needs platform approval
     approvalStatus: v.optional(v.string()), // "pending", "approved", "rejected"
@@ -303,4 +315,32 @@ export default defineSchema({
     createdAt: v.number(),
   }).index("byUserId", ["userId"])
     .index("byRead", ["read"]),
+
+  kycVerifications: defineTable({
+    userId: v.string(), // Clerk User ID
+    orgId: v.optional(v.string()),
+    status: v.string(), // "draft", "submitted", "verified", "rejected"
+    step: v.number(), // Current progress step (1, 2, 3...)
+
+    // Step 1: Business Details
+    companyName: v.optional(v.string()),
+    registrationNumber: v.optional(v.string()),
+    vatNumber: v.optional(v.string()),
+    country: v.optional(v.string()),
+
+    // Step 2: Documents
+    documents: v.array(v.object({
+      type: v.string(), // "incorporation_cert", "id_proof"
+      fileUrl: v.string(),
+      fileId: v.optional(v.string()), // Convex storage ID if needed later
+      uploadedAt: v.number(),
+    })),
+
+    // Metadata
+    submittedAt: v.optional(v.number()),
+    verifiedAt: v.optional(v.number()),
+    notes: v.optional(v.string()),
+  }).index("byUserId", ["userId"])
+    .index("byOrgId", ["orgId"])
+    .index("byStatus", ["status"]),
 }); 

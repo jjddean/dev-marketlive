@@ -6,15 +6,21 @@ import { FileText, FileBadge, FileWarning, CheckCircle, Clock } from 'lucide-rea
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Link } from 'react-router-dom';
+import { ComplianceKycModal } from "@/components/compliance/ComplianceKycModal";
 
 const CompliancePage = () => {
   // Live documents for compliance monitoring
   const liveDocuments = useQuery(api.documents.listMyDocuments, {}) || [];
+  const kycStatus = useQuery(api.compliance.getKycStatus);
 
   const pendingDocs = liveDocuments.filter(d => d.status === 'draft' || d.status === 'pending');
   const signedDocs = liveDocuments.filter(d => d.docusign?.status === 'completed' || d.status === 'approved');
 
-  const [kycStatus, setKycStatus] = React.useState<'pending' | 'verified'>('pending');
+  const [isKycOpen, setIsKycOpen] = React.useState(false);
+
+  // Derive status UI from real data
+  const currentStatus = kycStatus?.status || 'pending';
+  const isVerified = currentStatus === 'verified';
 
   const handleDownloadTemplate = (templateName: string) => {
     // Simulate query/download
@@ -23,19 +29,6 @@ const CompliancePage = () => {
       setTimeout(() => {
         toast.success("Download Complete");
       }, 1500);
-    });
-  };
-
-  const handleStartKYC = () => {
-    import('sonner').then(({ toast }) => {
-      toast.promise(new Promise((resolve) => setTimeout(resolve, 2000)), {
-        loading: 'Initializing Identity Verification...',
-        success: () => {
-          setKycStatus('verified');
-          return 'Identity Verified Successfully!';
-        },
-        error: 'Failed'
-      });
     });
   };
 
@@ -49,6 +42,8 @@ const CompliancePage = () => {
         overlayOpacity={0.6}
         className="mb-6"
       />
+
+      <ComplianceKycModal open={isKycOpen} onOpenChange={setIsKycOpen} />
 
       <div className="px-4 sm:px-6 lg:px-8 py-8">
         {/* Status Overview */}
@@ -75,16 +70,16 @@ const CompliancePage = () => {
           </div>
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-3 mb-3">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${kycStatus === 'verified' ? 'bg-green-50' : 'bg-indigo-50'}`}>
-                {kycStatus === 'verified' ? '✅' : '🛡️'}
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${isVerified ? 'bg-green-50' : 'bg-indigo-50'}`}>
+                {isVerified ? '✅' : '🛡️'}
               </div>
               <h3 className="font-semibold text-gray-900">KYC Status</h3>
             </div>
-            <p className={`text-xl font-bold pl-1 ${kycStatus === 'verified' ? 'text-green-600' : 'text-indigo-600'}`}>
-              {kycStatus === 'verified' ? 'VERIFIED' : 'IN PROGRESS'}
+            <p className={`text-xl font-bold pl-1 ${isVerified ? 'text-green-600' : 'text-indigo-600'}`}>
+              {isVerified ? 'VERIFIED' : currentStatus === 'submitted' ? 'UNDER REVIEW' : 'ACTION REQUIRED'}
             </p>
             <p className="text-sm text-gray-500 mt-1 pl-1">
-              {kycStatus === 'verified' ? 'Valid for 365 days' : 'Expires in 184 days'}
+              {isVerified ? 'Valid for 365 days' : 'Identity verification needed'}
             </p>
           </div>
         </div>
@@ -155,9 +150,10 @@ const CompliancePage = () => {
               </p>
               <Button
                 className="w-full bg-white text-blue-600 hover:bg-blue-50 font-semibold shadow-sm"
-                onClick={handleStartKYC}
+                onClick={() => setIsKycOpen(true)}
+                disabled={isVerified}
               >
-                Start KYC Process
+                {isVerified ? 'Verification Active' : 'Start KYC Process'}
               </Button>
             </div>
 

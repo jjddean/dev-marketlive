@@ -7,47 +7,48 @@ import { api } from "./_generated/api";
 // For production, consider using a proper PDF library like pdfkit
 
 export const generateDocumentPdf = action({
-    args: {
-        documentId: v.id("documents"),
-    },
-    handler: async (ctx, { documentId }): Promise<string> => {
-        // Get document data from Convex
-        const document = await ctx.runQuery(api.documents.getDocumentById, { documentId });
+  args: {
+    documentId: v.id("documents"),
+  },
+  handler: async (ctx, { documentId }): Promise<string> => {
+    // Get document data from Convex
+    const document = await ctx.runQuery(api.documents.getDocumentById, { documentId });
 
-        if (!document) {
-            throw new Error("Document not found");
-        }
+    if (!document) {
+      throw new Error("Document not found");
+    }
 
-        // Generate a simple HTML -> PDF like content
-        // In production, use pdfkit or similar to generate actual PDF
-        const htmlContent = generateDocumentHtml(document);
+    // Generate a simple HTML -> PDF like content
+    // In production, use pdfkit or similar to generate actual PDF
+    const htmlContent = generateDocumentHtml(document);
 
-        // Convert HTML to base64 (DocuSign can accept HTML for rendering)
-        // For actual PDF, you'd need a PDF generation library
-        const base64Content = Buffer.from(htmlContent).toString("base64");
+    // Convert HTML to base64 (DocuSign can accept HTML for rendering)
+    // For actual PDF, you'd need a PDF generation library
+    // Use btoa for standard web environment compatibility
+    const base64Content = btoa(unescape(encodeURIComponent(htmlContent)));
 
-        return base64Content;
-    },
+    return base64Content;
+  },
 });
 
 // Helper function to generate HTML content for a document
 function generateDocumentHtml(document: any): string {
-    const { type, documentData } = document;
+  const { type, documentData } = document;
 
-    switch (type) {
-        case "bill_of_lading":
-            return generateBillOfLadingHtml(documentData);
-        case "commercial_invoice":
-            return generateInvoiceHtml(documentData);
-        case "air_waybill":
-            return generateAirWaybillHtml(documentData);
-        default:
-            return generateGenericDocumentHtml(documentData);
-    }
+  switch (type) {
+    case "bill_of_lading":
+      return generateBillOfLadingHtml(documentData);
+    case "commercial_invoice":
+      return generateInvoiceHtml(documentData);
+    case "air_waybill":
+      return generateAirWaybillHtml(documentData);
+    default:
+      return generateGenericDocumentHtml(documentData);
+  }
 }
 
 function generateBillOfLadingHtml(data: any): string {
-    return `
+  return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -148,7 +149,7 @@ function generateBillOfLadingHtml(data: any): string {
 }
 
 function generateInvoiceHtml(data: any): string {
-    return `
+  return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -222,7 +223,7 @@ function generateInvoiceHtml(data: any): string {
 }
 
 function generateAirWaybillHtml(data: any): string {
-    return `
+  return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -276,7 +277,7 @@ function generateAirWaybillHtml(data: any): string {
 }
 
 function generateGenericDocumentHtml(data: any): string {
-    return `
+  return `
 <!DOCTYPE html>
 <html>
 <head>

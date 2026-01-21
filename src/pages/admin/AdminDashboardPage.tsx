@@ -72,14 +72,18 @@ const AdminDashboardPage = () => {
                 />
             </div>
 
-            {/* Recent Activity Section Placeholder */}
+
+            {/* Recent Activity Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 min-h-[300px]">
-                    <h2 className="text-lg font-bold text-gray-900 mb-4">Recent Bookings</h2>
-                    <div className="flex items-center justify-center h-full text-gray-400 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
-                        Select 'Bookings' in sidebar to view details
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-lg font-bold text-gray-900">Recent Activity</h2>
+                        <span className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded-full border border-gray-200">Live Feed</span>
                     </div>
+
+                    <RecentActivityFeed />
                 </div>
+
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 min-h-[300px]">
                     <h2 className="text-lg font-bold text-gray-900 mb-4">Revenue Overview</h2>
                     <div className="flex items-center justify-center h-full text-gray-400 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
@@ -90,5 +94,68 @@ const AdminDashboardPage = () => {
         </div>
     );
 };
+
+const RecentActivityFeed = () => {
+    const activity = useQuery(api.admin.getRecentActivity);
+
+    if (activity === undefined) {
+        return <div className="text-sm text-gray-500 text-center py-8">Loading activity...</div>;
+    }
+
+    if (!activity || activity.length === 0) {
+        return <div className="text-sm text-gray-500 text-center py-8">No recent activity found.</div>;
+    }
+
+    return (
+        <div className="space-y-4">
+            {activity.map((log: any) => {
+                const isEmail = log.action === 'email.sent';
+                const isBooking = log.action.startsWith('booking.');
+                const isUser = log.action.startsWith('user.');
+
+                return (
+                    <div key={log._id} className="flex items-start space-x-3 pb-3 border-b border-gray-50 last:border-0">
+                        <div className={`mt-0.5 p-1.5 rounded-full flex-shrink-0 
+                            ${isEmail ? 'bg-blue-50 text-blue-600' :
+                                isBooking ? 'bg-emerald-50 text-emerald-600' :
+                                    'bg-gray-100 text-gray-600'}`}>
+                            {isEmail ? <div className="w-4 h-4">✉️</div> :
+                                isBooking ? <div className="w-4 h-4">📦</div> :
+                                    <div className="w-4 h-4">👤</div>}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                                {formatActionLabel(log.action)}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate mt-0.5">
+                                {formatActionDetails(log)}
+                            </p>
+                        </div>
+                        <span className="text-xs text-gray-400 whitespace-nowrap">
+                            {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+
+function formatActionLabel(action: string) {
+    switch (action) {
+        case 'email.sent': return 'Email Notification Sent';
+        case 'booking.created': return 'New Booking Received';
+        case 'booking.approved': return 'Booking Approved';
+        case 'booking.rejected': return 'Booking Rejected';
+        default: return action;
+    }
+}
+
+function formatActionDetails(log: any) {
+    if (log.action === 'email.sent') return `To: ${log.details?.recipient || 'Unknown'}`;
+    if (log.action.startsWith('booking.')) return `Ref: ${log.entityId} • ${log.details?.customer || ''}`;
+    return log.details ? JSON.stringify(log.details) : '';
+}
+
 
 export default AdminDashboardPage;

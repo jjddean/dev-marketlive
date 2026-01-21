@@ -35,6 +35,7 @@ interface QuoteFormData {
     company: string;
   };
   selectedRate?: CarrierRate;
+  rates?: CarrierRate[];
 }
 
 interface QuoteRequestFormProps {
@@ -96,11 +97,12 @@ const QuoteRequestForm: React.FC<QuoteRequestFormProps> = ({ onSubmit, onCancel,
     setSelectedRate(rate);
   };
 
-  const handleBookRate = React.useCallback((rate: CarrierRate) => {
+  const handleBookRate = React.useCallback((rate: CarrierRate, allRates?: CarrierRate[]) => {
     setSelectedRate(rate);
     onSubmit({
       ...formData,
-      selectedRate: rate
+      selectedRate: rate,
+      rates: allRates || formData.rates || []
     });
   }, [formData, onSubmit]);
 
@@ -401,6 +403,21 @@ const QuoteRequestForm: React.FC<QuoteRequestFormProps> = ({ onSubmit, onCancel,
           </div>
         );
 
+      case 3:
+        return (
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Select Shipping Service</h3>
+            <LiveRateComparison
+              rateRequest={rateRequest}
+              onRateSelect={handleRateSelect}
+              onBook={handleBookRate}
+              onRatesFetched={(rates) => {
+                setFormData(prev => ({ ...prev, rates }));
+              }}
+            />
+          </div>
+        );
+
       case 4:
         return (
           <div className="space-y-4">
@@ -472,6 +489,9 @@ const QuoteRequestForm: React.FC<QuoteRequestFormProps> = ({ onSubmit, onCancel,
               rateRequest={rateRequest}
               onRateSelect={handleRateSelect}
               onBook={handleBookRate}
+              onRatesFetched={(rates) => {
+                setFormData(prev => ({ ...prev, rates }));
+              }}
             />
           </div>
         );

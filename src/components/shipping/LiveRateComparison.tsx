@@ -7,7 +7,8 @@ import { cn } from '@/lib/utils';
 interface LiveRateComparisonProps {
   rateRequest: RateRequest;
   onRateSelect?: (rate: CarrierRate) => void;
-  onBook?: (rate: CarrierRate) => void;
+  onBook?: (rate: CarrierRate, allRates?: CarrierRate[]) => void;
+  onRatesFetched?: (rates: CarrierRate[]) => void;
   className?: string;
 }
 
@@ -15,6 +16,7 @@ const LiveRateComparison: React.FC<LiveRateComparisonProps> = ({
   rateRequest,
   onRateSelect,
   onBook,
+  onRatesFetched,
   className
 }) => {
   const [rates, setRates] = useState<CarrierRate[]>([]);
@@ -37,6 +39,7 @@ const LiveRateComparison: React.FC<LiveRateComparisonProps> = ({
       console.log('Fetching live rates...', rateRequest);
       const carrierRates = await getAllCarrierRates(rateRequest);
       setRates(carrierRates);
+      onRatesFetched?.(carrierRates);
 
       if (carrierRates.length === 0) {
         setError('No rates available for this route');
@@ -201,7 +204,7 @@ const LiveRateComparison: React.FC<LiveRateComparisonProps> = ({
                           className="w-full sm:w-auto px-4 py-1.5 h-8 text-xs bg-primary hover:bg-primary/90 text-white font-medium rounded shadow-sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            onBook?.(rate);
+                            onBook?.(rate, rates);
                           }}
                         >
                           Book This Rate

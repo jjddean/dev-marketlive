@@ -13,51 +13,69 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { toast } from 'sonner';
+import { useStripeCheckout } from '@/hooks/useStripeCheckout';
 
 const PaymentsPage = () => {
   const [activeTab, setActiveTab] = useState('invoices');
-  const [processingId, setProcessingId] = useState<string | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
 
   // Live payment data from Convex
   const livePayments = useQuery(api.paymentAttempts.listMyPayments) || [];
 
   // Checkout Action
-  const createCheckout = useAction(api.billing.createCheckoutSession);
+  // const createCheckout = useAction(api.billing.createCheckoutSession);
   const completeSubscription = useMutation(api.payments.completeSubscription);
+  const confirmBookingPayment = useMutation(api.bookings.confirmBookingPayment);
 
   useEffect(() => {
     // Check for success query param
     const query = new URLSearchParams(window.location.search);
-    if (query.get('success')) {
-      completeSubscription({})
-        .then(() => {
-          alert("Payment Successful! Subscription Active.");
-          window.history.replaceState({}, document.title, window.location.pathname);
-        })
-        .catch((e) => console.error("Failed to complete:", e));
+    const success = query.get('success');
+    const invoiceId = query.get('invoice_id');
+    const sessionId = query.get('session_id');
+
+    if (success) {
+      // Case A: Booking Invoice Payment
+      if (invoiceId) {
+        // Strip prefixes if present to get raw ID if needed, 
+        // but our mutation handles cleaning or expects raw. 
+        // Let's pass what we got, mutation cleans it.
+        confirmBookingPayment({ bookingId: invoiceId })
+          .then(() => {
+            toast.success("Payment Received! Booking Confirmed.", {
+              duration: 5000,
+              description: "Your shipment has been marked as confirmed."
+            });
+            // Clean URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+          })
+          .catch((e) => {
+            console.error("Failed to confirm booking:", e);
+            toast.error("Payment recorded but confirmation failed. Please contact support.");
+          });
+      }
+      // Case B: Subscription Upgrade (Only if NO invoice_id)
+      else if (sessionId) {
+        completeSubscription({})
+          .then(() => {
+            toast.success("Payment Successful! Subscription Active.");
+            window.history.replaceState({}, document.title, window.location.pathname);
+          })
+          .catch((e) => console.error("Failed to complete subscription:", e));
+      }
     }
+
     if (query.get('canceled')) {
-      alert("Payment canceled.");
+      toast.info("Payment canceled.");
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
 
-  const handlePayInvoice = async (invoiceId: string) => {
-    setProcessingId(invoiceId);
-    try {
-      const { url } = await createCheckout({ type: 'invoice', invoiceId });
-      if (url) {
-        window.open(url, '_blank');
-      } else {
-        alert("Error: No Checkout URL returned.");
-      }
-    } catch (e: any) {
-      console.error(e);
-      alert("Failed to pay invoice: " + (e.message || "Unknown error"));
-    } finally {
-      setProcessingId(null);
-    }
+  const { startCheckout } = useStripeCheckout();
+
+  const handlePayInvoice = (invoiceId: string) => {
+    startCheckout(invoiceId);
   };
 
   // Hardcoded fallback invoices
@@ -154,8 +172,8 @@ const PaymentsPage = () => {
         <div className="flex space-x-2">
           <Button variant="outline" size="sm" onClick={() => setSelectedInvoice(row)}>View</Button>
           {row.status === 'Pending' && (
-            <Button size="sm" onClick={() => handlePayInvoice(row.id)} disabled={processingId === row.id}>
-              {processingId === row.id ? 'Processing...' : 'Pay Now'}
+            <Button size="sm" onClick={() => handlePayInvoice(row.id)}>
+              Pay Now
             </Button>
           )}
         </div>

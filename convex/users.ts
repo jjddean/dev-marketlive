@@ -101,6 +101,26 @@ export const getUser = query({
   },
 });
 
+// Delete a user (Admin only)
+export const deleteUser = mutation({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Unauthorized");
+
+    const currentUser = await ctx.db
+      .query("users")
+      .withIndex("byExternalId", (q) => q.eq("externalId", identity.subject))
+      .unique();
+
+    if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'platform:superadmin')) {
+      throw new Error("Only admins can delete users");
+    }
+
+    await ctx.db.delete(args.userId);
+  },
+});
+
 // List users for admin (with org filtering)
 export const listUsersForOrg = query({
   args: {},

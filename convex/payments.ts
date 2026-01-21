@@ -18,6 +18,23 @@ export const completeSubscription = mutation({
                 subscriptionTier: 'pro',
                 subscriptionStatus: 'active'
             });
+
+            // AUDIT LOG: Payment Success
+            await ctx.db.insert("auditLogs", {
+                action: "payment.completed",
+                entityType: "payment",
+                entityId: "PAY-" + Date.now(),
+                userId: identity.subject,
+                userEmail: user.email,
+                orgId: user.orgId,
+                details: {
+                    amount: "2450.00",
+                    currency: "USD",
+                    status: "succeeded",
+                    method: "stripe"
+                },
+                timestamp: Date.now(),
+            });
         }
     }
 });

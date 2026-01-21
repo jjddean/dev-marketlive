@@ -12,8 +12,10 @@ import type * as admin from "../admin.js";
 import type * as ai from "../ai.js";
 import type * as auditLogs from "../auditLogs.js";
 import type * as authHelpers from "../authHelpers.js";
+import type * as backfill from "../backfill.js";
 import type * as billing from "../billing.js";
 import type * as bookings from "../bookings.js";
+import type * as compliance from "../compliance.js";
 import type * as debug_email from "../debug_email.js";
 import type * as documents from "../documents.js";
 import type * as docusign from "../docusign.js";
@@ -34,6 +36,7 @@ import type * as seed from "../seed.js";
 import type * as shipments from "../shipments.js";
 import type * as simulation from "../simulation.js";
 import type * as stripe from "../stripe.js";
+import type * as upload from "../upload.js";
 import type * as users from "../users.js";
 import type * as workflows from "../workflows.js";
 
@@ -48,8 +51,10 @@ declare const fullApi: ApiFromModules<{
   ai: typeof ai;
   auditLogs: typeof auditLogs;
   authHelpers: typeof authHelpers;
+  backfill: typeof backfill;
   billing: typeof billing;
   bookings: typeof bookings;
+  compliance: typeof compliance;
   debug_email: typeof debug_email;
   documents: typeof documents;
   docusign: typeof docusign;
@@ -70,6 +75,7 @@ declare const fullApi: ApiFromModules<{
   shipments: typeof shipments;
   simulation: typeof simulation;
   stripe: typeof stripe;
+  upload: typeof upload;
   users: typeof users;
   workflows: typeof workflows;
 }>;

@@ -292,7 +292,8 @@ const ClientQuotesPage = () => {
                 incoterms: formData.incoterms,
                 urgency: formData.urgency,
                 additionalServices: formData.additionalServices,
-                contactInfo: formData.contactInfo
+                contactInfo: formData.contactInfo,
+                quotes: formData.rates || [] // Pass captured rates
             };
 
             const result = await createQuote({ request: requestData });

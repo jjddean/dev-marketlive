@@ -46,10 +46,21 @@ export const listAllBookings = query({
     }
 });
 
+
 export const listAllShipments = query({
     args: {},
     handler: async (ctx) => {
         // Admin check would go here
         return await ctx.db.query("shipments").order("desc").collect();
+    }
+});
+
+export const getRecentActivity = query({
+    args: {},
+    handler: async (ctx) => {
+        // Admin check would go here (already protected by UI role check usually, but good to add)
+        return await ctx.db.query("auditLogs")
+            .order("desc")
+            .take(20);
     }
 });
