@@ -28,3 +28,4 @@ export { default as BlogPage } from './BlogPage';
 export { default as FAQPage } from './FAQPage';
 export { default as CaseStudiesPage } from './CaseStudiesPage';
 export { default as NewsPage } from './NewsPage';
+export { default as WaitlistPage } from './WaitlistPage';

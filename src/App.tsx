@@ -26,7 +26,7 @@ import {
   HomePage, ServicesPage, SolutionsPage, PlatformPage,
   ResourcesPage, AboutPage, ContactPage, DashboardPage,
   ShipmentsPage, PaymentsPage, CompliancePage, DocumentsPage,
-  ReportsPage, AccountPage, ClientQuotesPage,
+  ReportsPage, AccountPage, ClientQuotesPage, WaitlistPage,
 } from './pages';
 import ClientBookingsPage from './pages/client/ClientBookingsPage';
 import ApiDocsPage from './pages/ApiDocsPage';
@@ -157,6 +157,8 @@ export default function App() {
               <Route path="/about" element={<AboutPage />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/api" element={<ApiDocsPage />} />
+              <Route path="/api" element={<ApiDocsPage />} />
+              <Route path="/access" element={<WaitlistPage />} />
               <Route path="/shared/:token" element={<SharedDocumentPage />} />
               <Route path="/api/docusign/callback" element={<DocusignCallbackPage />} />
 

@@ -343,4 +343,20 @@ export default defineSchema({
   }).index("byUserId", ["userId"])
     .index("byOrgId", ["orgId"])
     .index("byStatus", ["status"]),
+
+  waitlist: defineTable({
+    email: v.string(),
+    name: v.optional(v.string()),
+    company: v.optional(v.string()),
+    role: v.optional(v.string()), // "freight_forwarder", "importer", "exporter", "other"
+    status: v.string(), // "pending", "invited", "joined"
+    source: v.optional(v.string()), // utm_source, referrer, etc.
+    referralCode: v.optional(v.string()),
+    referredBy: v.optional(v.string()), // Code of the referrer
+    referrals: v.optional(v.number()),
+    invitedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  }).index("byEmail", ["email"])
+    .index("byStatus", ["status"])
+    .index("byReferralCode", ["referralCode"]),
 }); 

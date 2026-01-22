@@ -8,6 +8,9 @@ import QuoteRequestForm from '@/components/forms/QuoteRequestForm';
 import { toast } from 'sonner';
 
 import { VisualQuoteInput } from '@/components/home/VisualQuoteInput';
+import { useNavigate } from 'react-router-dom';
+import { useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 
 const HomePage = () => {
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
@@ -25,11 +28,40 @@ const HomePage = () => {
     }, 100);
   };
 
-  const handleQuoteSubmit = (data: any) => {
-    setIsQuoteModalOpen(false);
-    toast.success("Quote request submitted successfully!");
-    if (data.selectedRate) {
-      toast.success(`Booking confirmed with ${data.selectedRate.carrier}!`);
+  const navigate = useNavigate();
+  const createBooking = useMutation(api.quotes.createInstantQuoteAndBooking);
+
+  const handleQuoteSubmit = async (data: any) => {
+    try {
+      // 1. Prepare payload for mutation
+      const payload = {
+        origin: data.origin,
+        destination: data.destination,
+        serviceType: data.serviceType,
+        cargoType: data.cargoType,
+        weight: data.weight,
+        dimensions: data.dimensions,
+        value: data.value,
+        incoterms: data.incoterms,
+        urgency: data.urgency,
+        additionalServices: data.additionalServices,
+        contactInfo: data.contactInfo,
+        quotes: data.selectedRate ? [data.selectedRate] : [] // Pass selected rate if any
+      };
+
+      // 2. Call Backend
+      const result = await createBooking({ request: payload });
+
+      // 3. Close Modal & Redirect
+      setIsQuoteModalOpen(false);
+      toast.success("Booking initiated! Redirecting to payment...");
+
+      // Redirect to payments with the new quote ID
+      navigate(`/payments?quoteId=${result.quoteId}`);
+
+    } catch (error) {
+      console.error("Booking failed:", error);
+      toast.error("Failed to create booking. Please try again.");
     }
   };
 

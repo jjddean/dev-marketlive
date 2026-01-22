@@ -210,3 +210,24 @@ export const listShipments = query({
     });
   },
 });
+
+export const clearAllShipments = mutation({
+  args: {},
+  handler: async (ctx) => {
+    // 1. Get all shipments
+    const allShipments = await ctx.db.query("shipments").collect();
+
+    // 2. Delete each shipment
+    for (const shipment of allShipments) {
+      await ctx.db.delete(shipment._id);
+    }
+
+    // 3. Clear events as well
+    const allEvents = await ctx.db.query("trackingEvents").collect();
+    for (const event of allEvents) {
+      await ctx.db.delete(event._id);
+    }
+
+    return { success: true, count: allShipments.length };
+  },
+});

@@ -14,6 +14,9 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  optimizeDeps: {
+    include: ['mapbox-gl', 'react-map-gl/mapbox'],
+  },
   server: {
     port: 5173,
     strictPort: true,

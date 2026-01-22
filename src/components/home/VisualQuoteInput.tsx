@@ -1,49 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import Map, { Marker, Source, Layer } from 'react-map-gl/mapbox';
+import type { MapRef } from 'react-map-gl';
+import mapboxgl from 'mapbox-gl';
 import { Button } from '@/components/ui/button';
 import { Search, Plane, Ship, ArrowRight, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 
-// Fix for Leaflet default icon issues in React
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-
-let DefaultIcon = L.icon({
-    iconUrl: icon,
-    shadowUrl: iconShadow,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41]
-});
-L.Marker.prototype.options.icon = DefaultIcon;
+import 'mapbox-gl/dist/mapbox-gl.css';
 
 // --- GEOLOCATION MOCK ---
-// In a real app, we'd use OpenCage or Google Places API
 const PORTS: Record<string, [number, number]> = {
-    'London': [51.5074, -0.1278],
-    'New York': [40.7128, -74.0060],
-    'Shanghai': [31.2304, 121.4737],
-    'Singapore': [1.3521, 103.8198],
-    'Dubai': [25.2048, 55.2708],
-    'Los Angeles': [34.0522, -118.2437],
-    'Hamburg': [53.5511, 9.9937],
-    'Mumbai': [19.0760, 72.8777]
+    'London': [-0.1278, 51.5074],
+    'New York': [-74.0060, 40.7128],
+    'Shanghai': [121.4737, 31.2304],
+    'Singapore': [103.8198, 1.3521],
+    'Dubai': [55.2708, 25.2048],
+    'Los Angeles': [-118.2437, 34.0522],
+    'Hamburg': [9.9937, 53.5511],
+    'Mumbai': [72.8777, 19.0760]
 };
-
-// Component to adjust map view bounds automatically
-function MapController({ p1, p2 }: { p1?: [number, number], p2?: [number, number] }) {
-    const map = useMap();
-    useEffect(() => {
-        if (p1 && p2) {
-            const bounds = L.latLngBounds([p1, p2]);
-            map.fitBounds(bounds, { padding: [50, 50], animate: true });
-        } else if (p1) {
-            map.flyTo(p1, 5, { animate: true });
-        }
-    }, [p1, p2, map]);
-    return null;
-}
 
 interface VisualQuoteInputProps {
     onSearch: (data: { origin: string; destination: string }) => void;
@@ -53,10 +28,39 @@ export const VisualQuoteInput: React.FC<VisualQuoteInputProps> = ({ onSearch }) 
     const [origin, setOrigin] = useState('');
     const [destination, setDestination] = useState('');
     const [searching, setSearching] = useState(false);
+    const mapRef = useRef<MapRef>(null);
 
-    // Coordinates
-    const coordsOrigin = PORTS[Object.keys(PORTS).find(k => k.toLowerCase() === origin.toLowerCase()) || ''];
-    const coordsDest = PORTS[Object.keys(PORTS).find(k => k.toLowerCase() === destination.toLowerCase()) || ''];
+    // Coordinates (Longitude, Latitude for Mapbox)
+    const coordsOrigin = useMemo(() =>
+        PORTS[Object.keys(PORTS).find(k => k.toLowerCase() === origin.toLowerCase()) || ''],
+        [origin]);
+
+    const coordsDest = useMemo(() =>
+        PORTS[Object.keys(PORTS).find(k => k.toLowerCase() === destination.toLowerCase()) || ''],
+        [destination]);
+
+    // Handle Viewport Animation
+    useEffect(() => {
+        if (mapRef.current && coordsOrigin && coordsDest) {
+            // Fit bounds to show both points with padding
+            const bounds = new mapboxgl.LngLatBounds(
+                coordsOrigin,
+                coordsDest
+            );
+
+            mapRef.current.fitBounds(bounds, {
+                padding: 100,
+                duration: 2000,
+                pitch: 45 // 3D effect
+            });
+        } else if (mapRef.current && coordsOrigin) {
+            mapRef.current.flyTo({
+                center: coordsOrigin,
+                zoom: 4,
+                duration: 1500
+            });
+        }
+    }, [coordsOrigin, coordsDest]);
 
     const handleSearch = () => {
         if (!origin || !destination) {
@@ -72,42 +76,90 @@ export const VisualQuoteInput: React.FC<VisualQuoteInputProps> = ({ onSearch }) 
         }, 1500);
     };
 
+    // GeoJSON for the Route Line (Great Circle approximation would be better, but straight line for MVP)
+    const routeGeoJSON = useMemo(() => {
+        if (!coordsOrigin || !coordsDest) return null;
+        return {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+                type: 'LineString',
+                coordinates: [coordsOrigin, coordsDest]
+            }
+        };
+    }, [coordsOrigin, coordsDest]);
+
+    const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
+
+    if (!MAPBOX_TOKEN) {
+        return <div className="p-12 text-center text-red-500">Missing VITE_MAPBOX_TOKEN</div>;
+    }
+
     return (
-        <div className="relative w-full h-[500px] lg:h-[600px] rounded-xl overflow-hidden shadow-2xl border border-gray-200 bg-slate-50">
+        <div className="relative w-full h-[500px] lg:h-[600px] rounded-xl overflow-hidden shadow-2xl border border-gray-200 bg-slate-900">
             {/* 1. The Interactive Map Background */}
-            <div className="absolute inset-0 z-0">
-                <MapContainer
-                    center={[20, 0]}
-                    zoom={2}
-                    scrollWheelZoom={false}
-                    className="h-full w-full"
-                    zoomControl={false}
-                >
-                    <TileLayer
-                        // CartoDB Voyager is cleaner for UI backgrounds than OSM
-                        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                    />
+            <Map
+                ref={mapRef}
+                initialViewState={{
+                    longitude: -20,
+                    latitude: 30,
+                    zoom: 1.5,
+                    pitch: 0
+                }}
+                style={{ width: '100%', height: '100%' }}
+                mapStyle="mapbox://styles/mapbox/dark-v11" // Premium Dark Mode
+                mapboxAccessToken={MAPBOX_TOKEN}
+                projection={{ name: 'globe' }} // Ensure 3D globe projection
+                fog={{
+                    "range": [0.5, 10],
+                    "color": "#242B4B",
+                    "high-color": "#161B33",
+                    "space-color": "#0B1026"
+                }}
+            >
+                {/* Visual Markers */}
+                {coordsOrigin && (
+                    <Marker longitude={coordsOrigin[0]} latitude={coordsOrigin[1]} anchor="bottom">
+                        <div className="relative">
+                            <div className="w-4 h-4 bg-blue-500 rounded-full shadow-[0_0_10px_#3b82f6]"></div>
+                            <div className="absolute top-0 left-0 w-4 h-4 bg-blue-500 rounded-full animate-ping opacity-75"></div>
+                        </div>
+                    </Marker>
+                )}
 
-                    {/* Visual Markers */}
-                    {coordsOrigin && <Marker position={coordsOrigin}></Marker>}
-                    {coordsDest && <Marker position={coordsDest}></Marker>}
+                {coordsDest && (
+                    <Marker longitude={coordsDest[0]} latitude={coordsDest[1]} anchor="bottom">
+                        <div className="relative">
+                            <div className="w-4 h-4 bg-emerald-500 rounded-full shadow-[0_0_10px_#10b981]"></div>
+                            <div className="absolute top-0 left-0 w-4 h-4 bg-emerald-500 rounded-full animate-ping opacity-75"></div>
+                        </div>
+                    </Marker>
+                )}
 
-                    {/* The Line (Route) */}
-                    {coordsOrigin && coordsDest && (
-                        <Polyline
-                            positions={[coordsOrigin, coordsDest]}
-                            pathOptions={{ color: '#003366', weight: 3, dashArray: '10, 10', opacity: 0.7 }}
+                {/* Route Line Layer */}
+                {routeGeoJSON && (
+                    <Source id="route" type="geojson" data={routeGeoJSON}>
+                        <Layer
+                            id="route-layer"
+                            type="line"
+                            layout={{
+                                "line-join": "round",
+                                "line-cap": "round"
+                            }}
+                            paint={{
+                                "line-color": "#3b82f6",
+                                "line-width": 4,
+                                "line-dasharray": [2, 1],
+                                "line-opacity": 0.8
+                            }}
                         />
-                    )}
-
-                    <MapController p1={coordsOrigin} p2={coordsDest} />
-                </MapContainer>
-            </div>
+                    </Source>
+                )}
+            </Map>
 
             {/* 2. Floating Glassmorphism Input Bar */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-4xl z-10">
-                <div className="bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-xl border border-white/50 space-y-4">
+                <div className="bg-white/95 backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-white/50 space-y-4">
                     <div className="text-center mb-6">
                         <h2 className="text-2xl font-bold text-primary-900">Where are you shipping?</h2>
                         <p className="text-slate-500">Instant multi-modal quotes powered by AI.</p>

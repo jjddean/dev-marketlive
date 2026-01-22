@@ -41,8 +41,21 @@ export const createQuote = mutation({
     // Construct quote document
     const quoteDoc: any = {
       ...request,
-      // Use provided response OR build from request.quotes
-      quotes: response?.quotes || request.quotes || [],
+      // Use provided response OR build from request.quotes OR generate default
+      quotes: response?.quotes || request.quotes || [{
+        id: `rate-${Date.now()}`,
+        carrier: "MarketLive Express",
+        service_level: request.serviceType || "Standard",
+        amount: calculateShippingPrice({
+          origin: request.origin,
+          destination: request.destination,
+          weight: request.weight,
+          serviceType: request.serviceType,
+          cargoType: request.cargoType
+        }),
+        currency: "USD",
+        transit_time: estimateTransitTime(request.origin, request.destination, request.serviceType)
+      }],
       quoteId: response?.quoteId || `QT-${Date.now()}`,
       status: response?.status || "success",
       createdAt: Date.now(),
@@ -84,8 +97,20 @@ export const createInstantQuoteAndBooking = mutation({
 
     const transitTime = estimateTransitTime(request.origin, request.destination, request.serviceType);
 
-    // Use provided rates from frontend, or empty array if none
-    const quotes: any[] = request.quotes || [];
+    // Use provided rates from frontend, or generate one if none
+    let quotes: any[] = request.quotes || [];
+
+    if (quotes.length === 0) {
+      quotes = [{
+        id: `rate-${Date.now()}`,
+        carrier: "MarketLive Logistics",
+        service_level: request.serviceType || "Standard Freight",
+        amount: pricing,
+        currency: "USD",
+        transit_time: transitTime,
+        logo: "/logo.png" // Placeholder
+      }];
+    }
 
     // Link to current user when available
     const identity = await ctx.auth.getUserIdentity();

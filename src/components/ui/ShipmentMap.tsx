@@ -1,48 +1,49 @@
 
-import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
+import React, { useEffect, useState, useMemo } from 'react';
+import Map, { Marker, Popup, NavigationControl, FullscreenControl } from 'react-map-gl/mapbox';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import { useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
-import L from 'leaflet';
-
-// Fix for default marker icon in React-Leaflet
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-
-let DefaultIcon = L.icon({
-    iconUrl: icon,
-    shadowUrl: iconShadow,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41]
-});
-
-L.Marker.prototype.options.icon = DefaultIcon;
+import { Ship, Package, Navigation } from 'lucide-react';
 
 interface ShipmentMapProps {
     className?: string;
 }
 
 // Geocode city names to coordinates (simplified mapping)
+// In a real app, this would use the Mapbox Geocoding API
 const CITY_COORDS: Record<string, [number, number]> = {
-    'London': [51.5074, -0.1278],
-    'Hamburg': [53.5511, 9.9937],
-    'Shanghai': [31.2304, 121.4737],
-    'Felixstowe': [51.9642, 1.3515],
-    'Rotterdam': [51.9244, 4.4777],
-    'Singapore': [1.3521, 103.8198],
-    'Miami': [25.7617, -80.1918],
-    'Southampton': [50.9097, -1.4044],
-    'New York': [40.7128, -74.0060],
-    'Tokyo': [35.6762, 139.6503],
-    'Dubai': [25.2048, 55.2708],
-    'Long Beach': [33.7701, -118.1937],
+    'London': [-0.1278, 51.5074], // Lng, Lat for Mapbox
+    'Hamburg': [9.9937, 53.5511],
+    'Shanghai': [121.4737, 31.2304],
+    'Felixstowe': [1.3515, 51.9642],
+    'Rotterdam': [4.4777, 51.9244],
+    'Singapore': [103.8198, 1.3521],
+    'Miami': [-80.1918, 25.7617],
+    'Southampton': [-1.4044, 50.9097],
+    'New York': [-74.0060, 40.7128],
+    'Tokyo': [139.6503, 35.6762],
+    'Dubai': [55.2708, 25.2048],
+    'Long Beach': [-118.1937, 33.7701],
 };
 
+interface MapPoint {
+    id: string;
+    lat: number;
+    lng: number;
+    label: string;
+    status: string;
+    origin: string;
+    destination: string;
+}
+
 export function ShipmentMap({ className = '' }: ShipmentMapProps) {
-    // Fetch live shipments from Convex
+    // Fetch live shipments
     const liveShipments = useQuery(api.shipments.listShipments, { onlyMine: true });
-    const [mapData, setMapData] = useState<any[]>([]);
+    const [mapData, setMapData] = useState<MapPoint[]>([]);
+    const [popupInfo, setPopupInfo] = useState<MapPoint | null>(null);
+
+    const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
     useEffect(() => {
         if (!liveShipments) return;
@@ -53,12 +54,14 @@ export function ShipmentMap({ className = '' }: ShipmentMapProps) {
             .map((s: any) => {
                 const originCity = s.shipmentDetails.origin.split(',')[0].trim();
                 const destCity = s.shipmentDetails.destination.split(',')[0].trim();
+                // Mapbox uses [Lng, Lat] order for coordinates in constants, but Marker takes simplified props
+                // We stored them as [Lng, Lat] in CITY_COORDS
                 const coords = CITY_COORDS[destCity] || CITY_COORDS[originCity] || [0, 0];
 
                 return {
                     id: s.shipmentId,
-                    lat: coords[0],
-                    lng: coords[1],
+                    lng: coords[0],
+                    lat: coords[1],
                     label: destCity || originCity || 'Unknown',
                     status: s.status,
                     origin: s.shipmentDetails.origin,
@@ -77,41 +80,104 @@ export function ShipmentMap({ className = '' }: ShipmentMapProps) {
         setMapData(displayData);
     }, [liveShipments]);
 
-    // Calculate center based on all points (simple average)
-    const centerLab = mapData.length > 0
-        ? [mapData.reduce((sum, p) => sum + p.lat, 0) / mapData.length, mapData.reduce((sum, p) => sum + p.lng, 0) / mapData.length] as [number, number]
-        : [20, 0] as [number, number];
+    // Initial View State
+    const initialViewState = {
+        longitude: 0,
+        latitude: 20,
+        zoom: 1.5
+    };
+
+    if (!MAPBOX_TOKEN) {
+        return (
+            <div className={`h-full w-full flex items-center justify-center bg-gray-900 text-white ${className}`}>
+                <p>Missing VITE_MAPBOX_TOKEN</p>
+            </div>
+        );
+    }
 
     return (
-        <div className={`h-full w-full relative z-0 ${className}`}>
-            <MapContainer center={centerLab} zoom={2} style={{ height: '100%', width: '100%', position: 'relative', zIndex: 0 }}>
-                <TileLayer
-                    url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                />
+        <div className={`relative w-full h-full rounded-xl overflow-hidden shadow-lg border border-gray-800 bg-slate-900 ${className}`}>
+            <Map
+                mapboxAccessToken={MAPBOX_TOKEN}
+                initialViewState={initialViewState}
+                style={{ width: '100%', height: '100%' }}
+                mapStyle="mapbox://styles/mapbox/dark-v11"
+                attributionControl={false}
+            >
+                {/* Controls */}
+                <NavigationControl position="top-right" />
+                <FullscreenControl position="top-right" />
 
+                {/* Markers */}
                 {mapData.map((shipment) => (
                     <Marker
                         key={shipment.id}
-                        position={[shipment.lat, shipment.lng]}
+                        longitude={shipment.lng}
+                        latitude={shipment.lat}
+                        anchor="bottom"
+                        onClick={(e) => {
+                            // If we let the click propagate, it might close the popup immediately on some implementations
+                            e.originalEvent.stopPropagation();
+                            setPopupInfo(shipment);
+                        }}
                     >
-                        <Popup>
-                            <div className="p-2">
-                                <div className="font-semibold mb-1">{shipment.id}</div>
-                                <div className="text-gray-600 text-xs mb-1">{shipment.label}</div>
-                                <div className={`text-xs font-medium ${shipment.status === 'Delivered' ? 'text-green-600' :
-                                    shipment.status === 'In Transit' ? 'text-blue-600' : 'text-orange-600'
-                                    }`}>
-                                    {shipment.status}
-                                </div>
+                        <div className="group cursor-pointer relative">
+                            {/* Pulse effect for In Transit */}
+                            {shipment.status === 'In Transit' && (
+                                <div className="absolute -inset-2 bg-blue-500 rounded-full opacity-30 animate-ping group-hover:opacity-50"></div>
+                            )}
+
+                            <div className={`p-2 rounded-full shadow-lg transition-transform transform group-hover:scale-110 ${shipment.status === 'Delivered' ? 'bg-green-500 text-white' :
+                                    shipment.status === 'In Transit' ? 'bg-blue-500 text-white' :
+                                        'bg-orange-500 text-white'
+                                }`}>
+                                <Ship size={16} />
                             </div>
-                        </Popup>
+                        </div>
                     </Marker>
                 ))}
 
-                {/* Draw lines between origin/dest if we had full coords for both, 
-                    but for now we just marker the destination/current location */}
-            </MapContainer>
+                {/* Popups */}
+                {popupInfo && (
+                    <Popup
+                        anchor="top"
+                        longitude={popupInfo.lng}
+                        latitude={popupInfo.lat}
+                        onClose={() => setPopupInfo(null)}
+                        closeOnClick={false}
+                        className="text-black"
+                    >
+                        <div className="p-1 min-w-[200px]">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="font-bold text-sm text-gray-900">{popupInfo.id}</span>
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${popupInfo.status === 'Delivered' ? 'bg-green-100 text-green-700' :
+                                        popupInfo.status === 'In Transit' ? 'bg-blue-100 text-blue-700' :
+                                            'bg-orange-100 text-orange-700'
+                                    }`}>
+                                    {popupInfo.status}
+                                </span>
+                            </div>
+
+                            <div className="space-y-2 text-xs text-gray-600">
+                                <div className="flex items-start gap-2">
+                                    <div className="w-4 mt-0.5"><Navigation size={12} /></div>
+                                    <div>
+                                        <span className="block text-[10px] uppercase text-gray-400">Origin</span>
+                                        {popupInfo.origin}
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                    <div className="w-4 mt-0.5"><Package size={12} /></div>
+                                    <div>
+                                        <span className="block text-[10px] uppercase text-gray-400">Destination</span>
+                                        {popupInfo.destination}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </Popup>
+                )}
+            </Map>
         </div>
     );
 }
