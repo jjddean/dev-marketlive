@@ -14,7 +14,8 @@ import {
     Truck,
     Clock,
     ChevronRight,
-    ArrowUpRight
+    ArrowUpRight,
+    CreditCard
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import AdminPageHeader from '@/components/layout/admin/AdminPageHeader';
@@ -57,6 +58,7 @@ const AdminApprovalsPage = () => {
             case 'booking': return <Truck className="h-5 w-5 text-primary-500" />;
             case 'kyc': return <Users className="h-5 w-5 text-purple-500" />;
             case 'document': return <FileText className="h-5 w-5 text-orange-500" />;
+            case 'payment': return <CreditCard className="h-5 w-5 text-red-500" />;
             default: return <AlertTriangle className="h-5 w-5 text-gray-500" />;
         }
     };

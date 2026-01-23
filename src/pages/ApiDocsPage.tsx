@@ -141,7 +141,7 @@ const ApiDocsPage: React.FC = () => {
                 Authenticate requests by sending your API key in the arguments (for Convex functions) or headers.
               </p>
               <div className="bg-gray-50 p-3 rounded border border-gray-100 text-xs font-mono break-all">
-                args: &#123; apiKey: "mk_live_..." &#125;
+                args: &#123; apiKey: "cs_live_..." &#125;
               </div>
             </div>
 

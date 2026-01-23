@@ -1,19 +1,59 @@
 import React from 'react';
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import DataTable from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
-import { MapPin, Navigation, Package, Truck } from 'lucide-react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+import { MapPin, Navigation, Package, Truck, MoreHorizontal, AlertTriangle, CheckCircle } from 'lucide-react';
 import AdminPageHeader from '@/components/layout/admin/AdminPageHeader';
+import { Badge } from '@/components/ui/badge';
 
 const AdminShipmentsPage = () => {
+    // const { toast } = useToast(); // Removed
     const shipments = useQuery(api.admin.listAllShipments, {}) || [];
+    const flagShipment = useMutation(api.shipments.flagShipment);
+    const clearFlag = useMutation(api.shipments.clearShipmentFlag);
+
+    const handleFlag = async (shipmentId: string) => {
+        try {
+            await flagShipment({ shipmentIdString: shipmentId, riskLevel: 'high', reason: 'Manual Admin Flag' });
+            toast({ title: "Shipment Flagged", description: "Marked as High Risk." });
+        } catch (error) {
+            toast({ title: "Error", description: "Failed to flag shipment.", variant: "destructive" });
+        }
+    };
+
+    const handleClear = async (shipmentId: string) => {
+        try {
+            await clearFlag({ shipmentIdString: shipmentId });
+            toast({ title: "Risk Cleared", description: "Shipment marked as safe." });
+        } catch (error) {
+            toast({ title: "Error", description: "Failed to clear flag.", variant: "destructive" });
+        }
+    };
 
     const columns = [
         {
             key: 'trackingNumber',
             header: 'Tracking #',
             render: (value: string) => <span className="font-mono font-medium text-primary-600">{value}</span>
+        },
+        {
+            key: 'riskLevel',
+            header: 'Risk',
+            render: (val: string) => (
+                val === 'high' ? <Badge variant="destructive" className="flex w-fit items-center gap-1"><AlertTriangle className="h-3 w-3" /> High</Badge> :
+                    val === 'medium' ? <Badge variant="warning" className="bg-yellow-100 text-yellow-800">Medium</Badge> :
+                        <Badge variant="outline" className="text-gray-500 border-gray-200">Safe</Badge>
+            )
         },
         {
             key: 'carrier',
@@ -53,10 +93,28 @@ const AdminShipmentsPage = () => {
         {
             key: 'shipmentId',
             header: 'Actions',
-            render: (id: string) => (
-                <Button variant="outline" size="sm" className="h-8">
-                    Details
-                </Button>
+            render: (id: string, row: any) => (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-blue-600">
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => { }}>View Details</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {row.riskLevel === 'high' ? (
+                            <DropdownMenuItem onClick={() => handleClear(row.shipmentId)} className="text-green-600">
+                                <CheckCircle className="mr-2 h-4 w-4" /> Clear Risk Flag
+                            </DropdownMenuItem>
+                        ) : (
+                            <DropdownMenuItem onClick={() => handleFlag(row.shipmentId)} className="text-red-600">
+                                <AlertTriangle className="mr-2 h-4 w-4" /> Flag as High Risk
+                            </DropdownMenuItem>
+                        )}
+                    </DropdownMenuContent>
+                </DropdownMenu>
             )
         }
     ];

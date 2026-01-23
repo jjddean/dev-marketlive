@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from '@/components/ui/card';
@@ -7,18 +7,51 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+import {
     Users,
     Building2,
     MoreHorizontal,
     Shield,
-    UserCog
+    UserCog,
+    Ban,
+    CheckCircle
 } from 'lucide-react';
 import DataTable from '@/components/ui/data-table';
 import AdminPageHeader from '@/components/layout/admin/AdminPageHeader';
 
 const AdminCustomersPage = () => {
+    // const { toast } = useToast(); // Removed
     const users = useQuery(api.admin.listUsers) || [];
     const orgs = useQuery(api.admin.listOrganizations) || [];
+
+    const suspendOrg = useMutation(api.organizations.suspendOrganization);
+    const activateOrg = useMutation(api.organizations.activateOrganization);
+
+    const handleSuspendOrg = async (orgId: any) => {
+        try {
+            await suspendOrg({ orgId });
+            toast({ title: "Organization Suspended", description: "Access for this organization has been blocked." });
+        } catch (error) {
+            toast({ title: "Error", description: "Failed to suspend organization.", variant: "destructive" });
+        }
+    };
+
+    const handleActivateOrg = async (orgId: any) => {
+        try {
+            await activateOrg({ orgId });
+            toast({ title: "Organization Activated", description: "Access restored." });
+        } catch (error) {
+            toast({ title: "Error", description: "Failed to activate organization.", variant: "destructive" });
+        }
+    };
 
     const userColumns: any[] = [
         {
@@ -78,9 +111,16 @@ const AdminCustomersPage = () => {
             )
         },
         {
-            key: 'subscriptionStatus',
+            key: 'status',
             header: 'Status',
-            render: (val: string) => <Badge variant={val === 'active' ? 'outline' : 'secondary'} className={val === 'active' ? 'text-green-600 border-green-200 bg-green-50' : ''}>{val || 'Inactive'}</Badge>
+            render: (val: string) => (
+                <Badge
+                    variant={val === 'suspended' ? 'destructive' : val === 'active' ? 'outline' : 'secondary'}
+                    className={val === 'active' ? 'text-green-600 border-green-200 bg-green-50' : ''}
+                >
+                    {val || 'Active'}
+                </Badge>
+            )
         },
         {
             key: '_creationTime',
@@ -90,7 +130,28 @@ const AdminCustomersPage = () => {
         {
             key: '_id',
             header: 'Actions',
-            render: () => <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-blue-600"><MoreHorizontal className="h-4 w-4" /></Button>
+            render: (_: any, row: any) => (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-blue-600">
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {row.status === 'suspended' ? (
+                            <DropdownMenuItem onClick={() => handleActivateOrg(row._id)} className="text-green-600">
+                                <CheckCircle className="mr-2 h-4 w-4" /> Activate Organization
+                            </DropdownMenuItem>
+                        ) : (
+                            <DropdownMenuItem onClick={() => handleSuspendOrg(row._id)} className="text-red-600">
+                                <Ban className="mr-2 h-4 w-4" /> Suspend Organization
+                            </DropdownMenuItem>
+                        )}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            )
         }
     ];
 

@@ -87,10 +87,8 @@ const MobileNavigation: React.FC = () => {
       <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-40 md:hidden">
         <div className="flex items-center justify-between px-4 h-14">
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">ML</span>
-            </div>
-            <span className="text-lg font-bold text-gray-900">MarketLive</span>
+            <img src="/clearship-logo.png" alt="Clearship" className="w-8 h-8 object-contain" />
+            <span className="text-lg font-bold text-gray-900">Clearship®</span>
           </Link>
 
           <div className="flex items-center space-x-3">

@@ -9,13 +9,11 @@ const Footer: React.FC = () => {
           {/* Company Info */}
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">ML</span>
-              </div>
-              <span className="text-xl font-bold">MarketLive</span>
+              <img src="/clearship-logo.png" alt="Clearship" className="w-8 h-8 object-contain" />
+              <span className="text-xl font-bold">Clearship®</span>
             </div>
             <p className="text-gray-300 mb-4 max-w-md">
-              Professional freight forwarding services connecting UK businesses to global markets. 
+              Professional freight forwarding services connecting UK businesses to global markets.
               Streamlined logistics, digital documentation, and real-time tracking.
             </p>
             <div className="flex space-x-4">
@@ -108,7 +106,7 @@ const Footer: React.FC = () => {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-6">
               <p className="text-gray-400 text-sm">
-                © 2024 MarketLive Freight Services Ltd. All rights reserved.
+                © 2024 Clearship Freight Services Ltd. All rights reserved.
               </p>
               <div className="flex space-x-6">
                 <Link to="/privacy" className="text-gray-400 hover:text-white transition-colors text-sm">
@@ -122,7 +120,7 @@ const Footer: React.FC = () => {
                 </Link>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-4 mt-4 md:mt-0">
               <div className="text-gray-400 text-sm">
                 <span className="inline-flex items-center">

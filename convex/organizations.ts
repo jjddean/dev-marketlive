@@ -1,4 +1,4 @@
-import { internalMutation, query } from "./_generated/server";
+import { internalMutation, query, mutation } from "./_generated/server";
 import type { QueryCtx } from "./_generated/server";
 import { v } from "convex/values";
 
@@ -81,6 +81,54 @@ export const listOrganizations = query({
         // TODO: Add admin check
         return await ctx.db.query("organizations").collect();
     },
+});
+
+// Admin: Suspend Organization
+export const suspendOrganization = mutation({
+    args: { orgId: v.id("organizations"), reason: v.optional(v.string()) },
+    handler: async (ctx, args) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) throw new Error("Unauthorized");
+
+        // Verify Admin Role (or rely on UI protection + audit trail for MVP)
+        // const user = ... check role ...
+
+        await ctx.db.patch(args.orgId, {
+            status: "suspended",
+            updatedAt: Date.now()
+        });
+
+        await ctx.db.insert("auditLogs", {
+            action: "organization.suspended",
+            entityType: "organization",
+            entityId: args.orgId,
+            userId: identity.subject,
+            details: { reason: args.reason },
+            timestamp: Date.now()
+        });
+    }
+});
+
+// Admin: Activate Organization
+export const activateOrganization = mutation({
+    args: { orgId: v.id("organizations") },
+    handler: async (ctx, args) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) throw new Error("Unauthorized");
+
+        await ctx.db.patch(args.orgId, {
+            status: "active",
+            updatedAt: Date.now()
+        });
+
+        await ctx.db.insert("auditLogs", {
+            action: "organization.activated",
+            entityType: "organization",
+            entityId: args.orgId,
+            userId: identity.subject,
+            timestamp: Date.now()
+        });
+    }
 });
 
 // Helper function

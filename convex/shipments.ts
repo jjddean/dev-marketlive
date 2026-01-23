@@ -231,3 +231,78 @@ export const clearAllShipments = mutation({
     return { success: true, count: allShipments.length };
   },
 });
+
+// Admin: Flag a shipment as High Risk
+export const flagShipment = mutation({
+  args: {
+    shipmentId: v.id("shipments"), // This expects the internal ID usually, let's accept string ID or internal ID. 
+    // Wait, UI usually has the internal ID `_id`. Let's assume we pass the internal ID for efficiency.
+    // If the UI passes the string `shipmentId` field, we'd need to lookup.
+    // Standardizing on passing the internal `_id` is better for mutations.
+    // But typical existing code uses `shipmentId` (string) for lookups. 
+    // Let's support looking up by `shipmentId` string to match `upsertShipment`.
+    shipmentIdString: v.string(),
+    riskLevel: v.string(), // "medium", "high"
+    reason: v.string()
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Unauthorized");
+
+    const shipment = await ctx.db
+      .query("shipments")
+      .withIndex("byShipmentId", (q) => q.eq("shipmentId", args.shipmentIdString))
+      .unique();
+
+    if (!shipment) throw new Error("Shipment not found");
+
+    await ctx.db.patch(shipment._id, {
+      riskLevel: args.riskLevel,
+      flagReason: args.reason,
+      flaggedBy: identity.subject,
+      lastUpdated: Date.now()
+    });
+
+    // Audit Log
+    await ctx.db.insert("auditLogs", {
+      action: "shipment.flagged",
+      entityType: "shipment",
+      entityId: args.shipmentIdString,
+      userId: identity.subject,
+      details: { risk: args.riskLevel, reason: args.reason },
+      timestamp: Date.now()
+    });
+  }
+});
+
+// Admin: Clear Risk Flag
+export const clearShipmentFlag = mutation({
+  args: { shipmentIdString: v.string() },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Unauthorized");
+
+    const shipment = await ctx.db
+      .query("shipments")
+      .withIndex("byShipmentId", (q) => q.eq("shipmentId", args.shipmentIdString))
+      .unique();
+
+    if (!shipment) throw new Error("Shipment not found");
+
+    await ctx.db.patch(shipment._id, {
+      riskLevel: "low", // Reset to low/safe
+      flagReason: undefined,
+      flaggedBy: undefined,
+      lastUpdated: Date.now()
+    });
+
+    // Audit Log
+    await ctx.db.insert("auditLogs", {
+      action: "shipment.unflagged",
+      entityType: "shipment",
+      entityId: args.shipmentIdString,
+      userId: identity.subject,
+      timestamp: Date.now()
+    });
+  }
+});

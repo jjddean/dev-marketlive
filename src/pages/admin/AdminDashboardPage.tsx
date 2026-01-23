@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import {
@@ -35,6 +36,7 @@ const StatCard = ({ title, value, change, icon: Icon, trend }: any) => (
 );
 
 const AdminDashboardPage = () => {
+    const navigate = useNavigate();
     const stats = useQuery(api.admin.getDashboardStats);
 
     if (!stats) {
@@ -84,7 +86,6 @@ const AdminDashboardPage = () => {
 
 
             {/* Main Content Grid */}
-            {/* Main Content Grid */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
 
                 {/* Left Column Item 1: Inbox / Priority Actions */}
@@ -97,7 +98,7 @@ const AdminDashboardPage = () => {
                             </h2>
                             <p className="text-sm text-gray-500">Items requiring your immediate approval.</p>
                         </div>
-                        <Button variant="outline" size="sm" onClick={() => window.location.href = '/admin/approvals'}>
+                        <Button variant="outline" size="sm" onClick={() => navigate('/admin/approvals')}>
                             View All <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
                     </div>
@@ -119,7 +120,12 @@ const AdminDashboardPage = () => {
                         <div className="text-2xl font-bold text-gray-900 mt-1">$124,500</div>
                     </div>
                     <div className="bg-gray-50 p-4 border-t border-gray-100">
-                        <Button className="w-full bg-primary hover:bg-primary-700 text-white shadow-sm">View Financial Reports</Button>
+                        <Button
+                            className="w-full bg-primary hover:bg-primary-700 text-white shadow-sm"
+                            onClick={() => navigate('/admin/payments')}
+                        >
+                            View Financial Reports
+                        </Button>
                     </div>
                 </Card>
 

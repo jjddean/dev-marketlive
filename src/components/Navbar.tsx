@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { SignedIn, SignedOut, UserButton, OrganizationSwitcher } from '@clerk/clerk-react';
+import { Button } from '@/components/ui/button';
 import AuthButtons from './AuthButtons';
 import NotificationCenter from './ui/notification-center';
 
@@ -16,6 +17,7 @@ interface MenuItem {
   submenu?: SubMenuItem[];
   protected: boolean;
   hideOnAuth?: boolean;
+  isButton?: boolean;
 }
 
 const Navbar: React.FC = () => {
@@ -29,15 +31,15 @@ const Navbar: React.FC = () => {
 
   const menuItems: MenuItem[] = [
     { label: 'Home', path: '/', protected: false },
-    // Marketing pages - only show when signed out
-    { label: 'Services', path: '/services', protected: false, hideOnAuth: true },
-    { label: 'Solutions', path: '/solutions', protected: false, hideOnAuth: true },
-    { label: 'Platform', path: '/platform', protected: false, hideOnAuth: true },
-    { label: 'Resources', path: '/resources', protected: false, hideOnAuth: true },
-    { label: 'About', path: '/about', protected: false, hideOnAuth: true },
+    // Marketing pages - visible to all
+    { label: 'Services', path: '/services', protected: false },
+    { label: 'Solutions', path: '/solutions', protected: false },
+    { label: 'Platform', path: '/platform', protected: false },
+    { label: 'Resources', path: '/resources', protected: false },
+    { label: 'About', path: '/about', protected: false },
     { label: 'Contact', path: '/contact', protected: false },
     // Dashboard link only when signed in (sidebar has the rest)
-    { label: 'Dashboard', path: '/dashboard', protected: true },
+    { label: 'Dashboard', path: '/dashboard', protected: true, isButton: true },
   ];
   const toggleSubmenu = (label: string) => {
     if (activeMenu === label) {
@@ -50,8 +52,9 @@ const Navbar: React.FC = () => {
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        <Link to="/" className="navbar-logo">
-          MarketLive
+        <Link to="/" className="navbar-logo flex items-center gap-2">
+          <img src="/clearship-logo.png" alt="Clearship" className="h-10 w-auto object-contain" />
+          <span className="text-2xl font-bold text-primary-900">Clearship®</span>
         </Link>
 
         <ul className="nav-menu">
@@ -81,6 +84,12 @@ const Navbar: React.FC = () => {
                           </ul>
                         )}
                       </>
+                    ) : item.isButton ? (
+                      <Button asChild className="bg-primary hover:bg-primary/90 text-white shadow-sm text-sm font-medium h-8 px-3">
+                        <Link to={item.path || '#'}>
+                          {item.label}
+                        </Link>
+                      </Button>
                     ) : (
                       <Link to={item.path || '#'} className="nav-link">
                         {item.label}

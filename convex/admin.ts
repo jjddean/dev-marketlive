@@ -84,10 +84,16 @@ export const getPendingActions = query({
         const allDocs = await ctx.db.query("documents").collect();
         const pendingDocs = allDocs.filter(d => d.status === "pending_review");
 
+        // 4. Failed/Pending Payments (New)
+        // Note: We don't have a status index on paymentAttempts yet, so we scan (ok for MVP admin)
+        // Or we added it? Let's use filter for now.
+        const allPayments = await ctx.db.query("paymentAttempts").collect();
+        const pendingPayments = allPayments.filter(p => p.status === 'failed' || p.status === 'requires_action');
+
         // Normalize
         const actions = [
             ...bookings.map(b => ({
-                id: b._id,
+                id: b._id, // Internal ID preferable for mutations
                 type: 'booking',
                 priority: 'high',
                 title: `Booking Approval: ${b.bookingId}`,
@@ -112,6 +118,15 @@ export const getPendingActions = query({
                 subtitle: `Ref: ${d.documentData?.documentNumber}`,
                 createdAt: d.updatedAt || d.createdAt,
                 status: 'pending_review'
+            })),
+            ...pendingPayments.map(p => ({
+                id: p._id,
+                type: 'payment',
+                priority: 'high',
+                title: `Payment Issue: ${p.invoice_id}`,
+                subtitle: `Amount: ${p.totals?.grand_total?.amount_formatted || 'Unknown'} - ${p.status}`,
+                createdAt: p.created_at,
+                status: p.status
             }))
         ];
 

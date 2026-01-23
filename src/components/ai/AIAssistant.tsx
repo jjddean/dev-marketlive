@@ -166,7 +166,7 @@ Answer briefly and professionally.
                     onClick={() => setIsOpen(true)}
                     className="rounded-full w-14 h-14 bg-[#003057] hover:opacity-90 shadow-lg flex items-center justify-center transition-transform hover:scale-105"
                 >
-                    <MessageSquare className="h-6 w-6 text-white" />
+                    <MessageSquare className="h-10 w-10 text-white" />
                 </Button>
             )}
         </div>

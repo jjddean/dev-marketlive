@@ -17,7 +17,7 @@ export const generateApiKey = mutation({
         // Generate a simple key - in production, use a more robust generator or library
         // Format: mk_live_<random_string>
         const randomPart = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-        const key = `mk_live_${randomPart}`;
+        const key = `cs_live_${randomPart}`;
 
         const keyId = await ctx.db.insert("apiKeys", {
             key,

@@ -29,6 +29,7 @@ export default defineSchema({
     imageUrl: v.optional(v.string()),
     createdBy: v.optional(v.string()), // Clerk user ID who created it
     membersCount: v.optional(v.number()),
+    status: v.optional(v.string()), // "active", "suspended", "terminated"
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("byClerkOrgId", ["clerkOrgId"])
@@ -111,6 +112,11 @@ export default defineSchema({
       destination: v.string(),
       value: v.string(),
     }),
+    // Compliance & Risk Fields
+    riskLevel: v.optional(v.string()), // "low", "medium", "high"
+    flaggedBy: v.optional(v.string()), // User ID of admin who flagged it
+    flagReason: v.optional(v.string()),
+
     userId: v.optional(v.id("users")),
     orgId: v.optional(v.string()), // Multi-tenancy
     lastUpdated: v.number(),

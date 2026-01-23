@@ -75,7 +75,7 @@ function Layout({ children }: LayoutProps) {
   }, []);
   const isClientApp = [
     '/dashboard', '/shipments', '/bookings', '/quotes',
-    '/payments', '/documents', '/compliance', '/reports', '/account'
+    '/payments', '/documents', '/compliance', '/reports', '/account', '/api'
   ].some(path => location.pathname.startsWith(path));
 
   return (
@@ -156,7 +156,7 @@ export default function App() {
           <Layout>
             <Routes>
               {/* Public Routes */}
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/" element={<HomePage />} />
               <Route path="/services" element={<ServicesPage />} />
               <Route path="/solutions" element={<SolutionsPage />} />
               <Route path="/about" element={<AboutPage />} />

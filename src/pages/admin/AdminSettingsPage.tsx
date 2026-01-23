@@ -1,13 +1,28 @@
 import React from 'react';
+import { useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { Settings } from 'lucide-react';
+import { Settings, Database } from 'lucide-react';
 import AdminPageHeader from '@/components/layout/admin/AdminPageHeader';
+import { toast } from "sonner";
 
 const AdminSettingsPage = () => {
+    const seedData = useMutation(api.seed.seedAdminData);
+
+    const handleSeedData = async () => {
+        try {
+            await seedData({});
+            toast.success("Test data seeded successfully!");
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to seed data.");
+        }
+    };
+
     return (
         <div className="space-y-6 max-w-4xl">
             <AdminPageHeader
@@ -55,6 +70,23 @@ const AdminSettingsPage = () => {
                         </div>
                         <Switch checked={false} />
                     </div>
+                </CardContent>
+            </Card>
+
+            <Card className="border-orange-200 bg-orange-50">
+                <CardHeader>
+                    <CardTitle className="text-orange-900">Development Tools</CardTitle>
+                    <CardDescription className="text-orange-700">Utilities for testing and seeding data.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button
+                        variant="outline"
+                        className="bg-white hover:bg-orange-100 border-orange-200 text-orange-900"
+                        onClick={handleSeedData}
+                    >
+                        <Database className="mr-2 h-4 w-4" />
+                        Seed Test Data (Admin)
+                    </Button>
                 </CardContent>
             </Card>
 
