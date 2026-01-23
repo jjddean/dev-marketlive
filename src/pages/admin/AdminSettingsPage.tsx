@@ -4,14 +4,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { Settings } from 'lucide-react';
+import AdminPageHeader from '@/components/layout/admin/AdminPageHeader';
 
 const AdminSettingsPage = () => {
     return (
         <div className="space-y-6 max-w-4xl">
-            <div>
-                <h1 className="text-2xl font-bold text-gray-900">Platform Settings</h1>
-                <p className="text-gray-500">Configure global application parameters.</p>
-            </div>
+            <AdminPageHeader
+                title="Platform Settings"
+                subtitle="Configure global application parameters."
+                icon={Settings}
+            />
 
             <Card>
                 <CardHeader>

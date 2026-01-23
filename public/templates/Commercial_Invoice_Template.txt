@@ -1,0 +1,24 @@
+COMMERCIAL INVOICE TEMPLATE
+[This is a placeholder for a real Commercial Invoice document]
+
+Exporter (Sender):
+[Name]
+[Address]
+
+Consignee (Receiver):
+[Name]
+[Address]
+
+Invoice Number: ___________
+Date: ___________
+
+Description of Goods | HS Code | Country of Origin | Quantity | Unit Value | Total Value
+--------------------------------------------------------------------------------------
+                   |         |                   |          |            |
+                   |         |                   |          |            |
+                   |         |                   |          |            |
+
+Total Invoice Value: [Currency] [Amount]
+
+Signature: ______________________
+Date: ______________________

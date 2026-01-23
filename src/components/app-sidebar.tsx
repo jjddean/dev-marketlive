@@ -9,6 +9,7 @@ import {
   FileText,
   FileCheck,
   BarChart3,
+  Code,
 } from "lucide-react"
 import { useLocation } from "react-router-dom"
 import { useUser, OrganizationSwitcher } from "@clerk/clerk-react"
@@ -79,6 +80,11 @@ const navSecondary = [
     url: "/account",
     icon: LayoutDashboard,
   },
+  {
+    title: "Dev API",
+    url: "/api",
+    icon: Code,
+  },
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -99,9 +105,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader className="h-14 border-b">
+      <SidebarHeader className="h-14 border-b bg-primary text-primary-foreground">
         <a href="/dashboard" className="flex items-center gap-3 px-4 h-full">
-          <img src="/ship-logo.png" alt="MarketLive" className="h-6 w-6" />
+          <div className="bg-white/10 p-1.5 rounded-md backdrop-blur-sm border border-white/20">
+            <img src="/ship-logo.png" alt="MarketLive" className="h-5 w-5" />
+          </div>
           <span className="truncate text-base font-semibold group-data-[collapsible=icon]:hidden">MarketLive</span>
         </a>
       </SidebarHeader>

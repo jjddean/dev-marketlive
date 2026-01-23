@@ -206,9 +206,9 @@ const DashboardPage = () => {
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="w-full justify-start h-auto whitespace-normal">
-                  <Link to="/admin/carriers" className="flex items-center py-2">
-                    <span className="mr-2 shrink-0">🔗</span>
-                    <span className="text-left">Carrier APIs</span>
+                  <Link to="/payments" className="flex items-center py-2">
+                    <span className="mr-2 shrink-0">💳</span>
+                    <span className="text-left">View Invoices</span>
                   </Link>
                 </Button>
                 <SimulateTrafficButton />

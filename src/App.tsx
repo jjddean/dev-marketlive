@@ -26,19 +26,24 @@ import {
   HomePage, ServicesPage, SolutionsPage, PlatformPage,
   ResourcesPage, AboutPage, ContactPage, DashboardPage,
   ShipmentsPage, PaymentsPage, CompliancePage, DocumentsPage,
-  ReportsPage, AccountPage, ClientQuotesPage, WaitlistPage,
+  ReportsPage, AccountPage, ClientQuotesPage, WaitlistPage
 } from './pages';
 import ClientBookingsPage from './pages/client/ClientBookingsPage';
 import ApiDocsPage from './pages/ApiDocsPage';
 import SharedDocumentPage from './pages/SharedDocumentPage';
 import DocusignCallbackPage from './pages/DocusignCallbackPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminApprovalsPage from './pages/admin/AdminApprovalsPage';
 import AdminBookingsPage from './pages/admin/AdminBookingsPage';
+import AdminFinancePage from './pages/admin/AdminFinancePage';
+import AdminWaitlistPage from './pages/admin/AdminWaitlistPage';
+import AdminAuditPage from './pages/admin/AdminAuditPage';
+import AdminCustomersPage from './pages/admin/AdminCustomersPage';
 import AdminShipmentsPage from './pages/admin/AdminShipmentsPage';
 import AdminCarriersPage from './pages/admin/AdminCarriersPage';
 import AdminDocumentsPage from './pages/admin/AdminDocumentsPage';
 import AdminCompliancePage from './pages/admin/AdminCompliancePage';
-import AdminCustomersPage from './pages/admin/AdminCustomersPage';
+
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 import DocumentPrintPage from './pages/DocumentPrintPage';
 import ClientSidebar from './components/layout/ClientSidebar';
@@ -151,14 +156,15 @@ export default function App() {
           <Layout>
             <Routes>
               {/* Public Routes */}
-              <Route path="/" element={<HomePage />} />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/services" element={<ServicesPage />} />
               <Route path="/solutions" element={<SolutionsPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/api" element={<ApiDocsPage />} />
-              <Route path="/api" element={<ApiDocsPage />} />
+
               <Route path="/access" element={<WaitlistPage />} />
+
               <Route path="/shared/:token" element={<SharedDocumentPage />} />
               <Route path="/api/docusign/callback" element={<DocusignCallbackPage />} />
 
@@ -169,10 +175,16 @@ export default function App() {
                     <AdminLayout>
                       <Routes>
                         <Route index element={<AdminDashboardPage />} />
+                        <Route path="approvals" element={<AdminApprovalsPage />} />
                         <Route path="bookings" element={<AdminBookingsPage />} />
+                        <Route path="payments" element={<AdminFinancePage />} />
+                        <Route path="waitlist" element={<AdminWaitlistPage />} />
+                        <Route path="audit" element={<AdminAuditPage />} />
+                        <Route path="customers" element={<AdminCustomersPage />} />
                         <Route path="shipments" element={<AdminShipmentsPage />} />
                         <Route path="carriers" element={<AdminCarriersPage />} />
                         <Route path="documents" element={<AdminDocumentsPage />} />
+                        <Route path="compliance" element={<AdminCompliancePage />} />
                         <Route path="settings" element={<AdminSettingsPage />} />
                       </Routes>
                     </AdminLayout>

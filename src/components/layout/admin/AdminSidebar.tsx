@@ -2,82 +2,91 @@ import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard,
-    Package,
     Truck,
     FileText,
     Users,
     Settings,
-    LogOut,
     ShieldCheck,
-    Ship
+    CreditCard,
+    History
 } from 'lucide-react';
-import { UserButton, OrganizationSwitcher } from '@clerk/clerk-react';
+import { UserButton } from '@clerk/clerk-react';
+
+/* 
+  Simplified Flat Navigation
+  Core high-frequency items only.
+*/
+
+const navigation: { name: string; href: string; icon: any; badge?: number }[] = [
+    { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+    { name: 'Bookings', href: '/admin/bookings', icon: FileText },
+    { name: 'Shipments', href: '/admin/shipments', icon: Truck },
+    { name: 'Customers', href: '/admin/customers', icon: Users },
+    { name: 'Waitlist', href: '/admin/waitlist', icon: History },
+    { name: 'Audit Logs', href: '/admin/audit', icon: ShieldCheck },
+    { name: 'Finance', href: '/admin/payments', icon: CreditCard },
+    { name: 'Compliance', href: '/admin/compliance', icon: ShieldCheck },
+    { name: 'Settings', href: '/admin/settings', icon: Settings },
+];
 
 const AdminSidebar = () => {
     const location = useLocation();
 
-    const navigation = [
-        { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-        { name: 'Bookings', href: '/admin/bookings', icon: FileText },
-        { name: 'Shipments', href: '/admin/shipments', icon: Truck },
-        { name: 'Documents', href: '/admin/documents', icon: FileText },
-        { name: 'Compliance', href: '/admin/compliance', icon: ShieldCheck },
-        { name: 'Customers', href: '/admin/customers', icon: Users },
-        { name: 'Carrier API', href: '/admin/carriers', icon: Ship },
-        { name: 'Settings', href: '/admin/settings', icon: Settings },
-    ];
-
     return (
-        <div className="hidden md:flex flex-col w-64 bg-slate-900 border-r border-slate-800 min-h-screen fixed left-0 top-0 text-white z-50">
-            {/* Logo Area */}
-            <div className="h-16 flex items-center px-6 border-b border-slate-800">
-                <ShieldCheck className="h-6 w-6 text-emerald-400 mr-2" />
-                <span className="text-lg font-bold tracking-tight text-white">Admin Portal</span>
+        <div className="hidden md:flex flex-col w-56 bg-slate-950 border-r border-slate-800/50 h-screen fixed left-0 top-0 text-slate-300 z-50">
+            {/* Logo Area - Compact */}
+            <div className="h-14 flex items-center px-4 border-b border-slate-800/50 bg-slate-950/50 backdrop-blur-sm">
+                <div className="flex items-center gap-2 text-white">
+                    <ShieldCheck className="h-5 w-5 text-primary-400" />
+                    <span className="font-bold tracking-tight text-sm">Admin Panel</span>
+                </div>
             </div>
 
-            {/* Navigation */}
-            <div className="flex-1 overflow-y-auto py-6 space-y-1 px-3">
-                {navigation.map((item) => {
-                    const isActive = location.pathname === item.href;
-                    return (
-                        <NavLink
-                            key={item.name}
-                            to={item.href}
-                            className={({ isActive }) => `
-                flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors
-                ${isActive
-                                    ? 'bg-emerald-500/10 text-emerald-400'
-                                    : 'text-slate-400 hover:text-white hover:bg-slate-800'}
-              `}
-                        >
-                            <item.icon className={`h-5 w-5 mr-3 ${isActive ? 'text-emerald-400' : 'text-slate-500 group-hover:text-white'}`} />
-                            {item.name}
-                        </NavLink>
-                    );
-                })}
+            {/* Navigation - Flat & Dense */}
+            <div className="flex-1 overflow-y-auto py-4 px-2 custom-scrollbar">
+                <nav className="space-y-0.5">
+                    {navigation.map((item) => {
+                        const isActive = location.pathname === item.href;
+                        return (
+                            <NavLink
+                                key={item.name}
+                                to={item.href}
+                                className={({ isActive }) => `
+                                    flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200
+                                    ${isActive
+                                        ? 'bg-primary-500/10 text-primary-400 shadow-sm shadow-primary-900/10'
+                                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'}
+                                `}
+                            >
+                                <div className="flex items-center">
+                                    <item.icon className={`h-4 w-4 mr-3 ${isActive ? 'text-primary-400' : 'text-slate-500'}`} />
+                                    {item.name}
+                                </div>
+                                {item.badge && (
+                                    <span className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${isActive ? 'bg-primary-500/20 text-primary-300' : 'bg-slate-800 text-slate-500'}`}>
+                                        {item.badge}
+                                    </span>
+                                )}
+                            </NavLink>
+                        );
+                    })}
+                </nav>
             </div>
 
-            {/* User Footer */}
-            <div className="p-4 border-t border-slate-800 space-y-3">
-                {/* Organization Switcher for Admins */}
-                <OrganizationSwitcher
-                    hidePersonal={true}
-                    afterCreateOrganizationUrl="/admin"
-                    afterSelectOrganizationUrl="/admin"
-                    appearance={{
+            {/* User Footer - Minimal */}
+            <div className="p-3 border-t border-slate-800/50 bg-slate-900/30">
+                <div className="flex items-center space-x-3 p-1.5 rounded-lg hover:bg-slate-800/50 transition-colors cursor-pointer">
+                    <UserButton afterSignOutUrl="/" appearance={{
                         elements: {
-                            rootBox: "w-full",
-                            organizationSwitcherTrigger: "w-full justify-between bg-slate-800 text-white border-slate-700 hover:bg-slate-700"
+                            avatarBox: "w-7 h-7 ring-1 ring-slate-700"
                         }
-                    }}
-                />
-                <div className="flex items-center space-x-3 bg-slate-800/50 p-2 rounded-lg">
-                    <div className="bg-white rounded-full p-0.5">
-                        <UserButton afterSignOutUrl="/" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">Administrator</p>
-                        <p className="text-xs text-slate-500 truncate">Platform Admin</p>
+                    }} />
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                        <p className="text-xs font-medium text-white truncate">Administrator</p>
+                        <p className="text-[10px] text-primary-400 truncate flex items-center gap-1">
+                            <span className="w-1 h-1 rounded-full bg-primary-400"></span>
+                            Online
+                        </p>
                     </div>
                 </div>
             </div>

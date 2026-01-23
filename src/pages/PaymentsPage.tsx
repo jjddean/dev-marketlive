@@ -66,11 +66,71 @@ const PaymentsPage = () => {
       }
     }
 
+
+
     if (query.get('canceled')) {
       toast.info("Payment canceled.");
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
+
+  const createBooking = useMutation(api.bookings.createBooking);
+  const fetchedQuote = useQuery(api.quotes.getQuote,
+    new URLSearchParams(window.location.search).get('quoteId')
+      ? { quoteId: new URLSearchParams(window.location.search).get('quoteId')! }
+      : "skip"
+  );
+
+  useEffect(() => {
+    // If we have a quoteId in URL and valid quote data, Create a Booking automatically
+    const qId = new URLSearchParams(window.location.search).get('quoteId');
+    if (qId && fetchedQuote && !fetchedQuote.convertedToBooking) {
+      const autoBook = async () => {
+        try {
+          toast.loading("Processing your booking...");
+          const rate = fetchedQuote.quotes[0]; // For instant quotes, usually just one
+          const contact = fetchedQuote.contactInfo;
+
+          // Convert Quote -> Booking
+          const result = await createBooking({
+            quoteId: fetchedQuote.quoteId,
+            carrierQuoteId: rate.id || `rate-auto-${Date.now()}`,
+            customerDetails: {
+              name: contact.name,
+              email: contact.email,
+              phone: contact.phone || 'N/A',
+              company: contact.company || 'N/A'
+            },
+            pickupDetails: {
+              address: fetchedQuote.origin,
+              date: new Date().toISOString(), // Today
+              timeWindow: '09:00 - 18:00',
+              contactPerson: contact.name,
+              contactPhone: contact.phone || ''
+            },
+            deliveryDetails: {
+              address: fetchedQuote.destination,
+              date: new Date(Date.now() + 7 * 86400000).toISOString(),
+              timeWindow: '09:00 - 18:00',
+              contactPerson: contact.name,
+              contactPhone: contact.phone || ''
+            }
+          });
+
+          toast.dismiss();
+          toast.success("Booking Created! Invoice generated.");
+
+          // Clean URL so we don't re-run
+          window.history.replaceState({}, document.title, window.location.pathname);
+
+        } catch (e) {
+          console.error("Auto-booking failed", e);
+          toast.error("Could not finalize booking.");
+        }
+      };
+      autoBook();
+    }
+  }, [fetchedQuote]);
 
   const { startCheckout } = useStripeCheckout();
 

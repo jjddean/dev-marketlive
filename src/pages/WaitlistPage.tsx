@@ -8,6 +8,8 @@ import { toast } from 'sonner';
 import { Ship, CheckCircle2, ArrowRight, ShieldCheck, Globe, Zap } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { InteractiveHero } from './InteractiveHero';
+import { LiveRiskWidget } from '@/components/marketing/LiveRiskWidget';
+import { LandedCostWidget } from '@/components/marketing/LandedCostWidget';
 
 const WaitlistPage = () => {
     const [email, setEmail] = useState('');
@@ -139,15 +141,15 @@ const WaitlistPage = () => {
             {/* Hero Section */}
             <div className="pt-24 pb-12 px-4 max-w-7xl mx-auto">
                 <div className="text-center mb-10">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#003057]/10 border border-[#003057]/20 text-[#003057] text-xs font-semibold uppercase tracking-wide mb-6">
-                        <span className="w-2 h-2 rounded-full bg-[#003057] animate-pulse"></span>
-                        <span className="text-[#003057]">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-wide mb-6">
+                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                        <span className="text-primary">
                             Limited Early Access 2026
                         </span>
                     </div>
                     <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 tracking-tight mb-6 leading-tight max-w-4xl mx-auto">
                         Freight Forwarding That Actually <br className="hidden md:block" />
-                        <span className="text-[#003057]">Gives You Control</span>
+                        <span className="text-primary">Gives You Control</span>
                     </h1>
                     <p className="text-lg md:text-xl text-slate-600 mb-8 max-w-2xl mx-auto leading-relaxed">
                         Instant quotes. Real-time tracking. Platform oversight on every high-risk step.
@@ -162,10 +164,10 @@ const WaitlistPage = () => {
                     </p>
                     <div className="flex flex-wrap justify-center gap-x-12 gap-y-8 opacity-70 hover:opacity-100 transition-all duration-500">
                         {/* Logos now using Brand Blue */}
-                        <div className="h-8 font-bold text-slate-800 hover:text-[#003057] text-xl flex items-center gap-2 transition-colors"><Globe className="w-6 h-6 text-[#003057]" /> GlobalFreight</div>
-                        <div className="h-8 font-bold text-slate-800 hover:text-[#003057] text-xl flex items-center gap-2 transition-colors"><Ship className="w-6 h-6 text-[#003057]" /> OceanBlue</div>
-                        <div className="h-8 font-bold text-slate-800 hover:text-[#003057] text-xl flex items-center gap-2 transition-colors"><Zap className="w-6 h-6 text-[#003057]" /> FastTrack</div>
-                        <div className="h-8 font-bold text-slate-800 hover:text-[#003057] text-xl flex items-center gap-2 transition-colors"><ShieldCheck className="w-6 h-6 text-[#003057]" /> SecureCargo</div>
+                        <div className="h-8 font-bold text-slate-800 hover:text-primary text-xl flex items-center gap-2 transition-colors"><Globe className="w-6 h-6 text-primary" /> GlobalFreight</div>
+                        <div className="h-8 font-bold text-slate-800 hover:text-primary text-xl flex items-center gap-2 transition-colors"><Ship className="w-6 h-6 text-primary" /> OceanBlue</div>
+                        <div className="h-8 font-bold text-slate-800 hover:text-primary text-xl flex items-center gap-2 transition-colors"><Zap className="w-6 h-6 text-primary" /> FastTrack</div>
+                        <div className="h-8 font-bold text-slate-800 hover:text-primary text-xl flex items-center gap-2 transition-colors"><ShieldCheck className="w-6 h-6 text-primary" /> SecureCargo</div>
                     </div>
                 </div>
 
@@ -178,36 +180,35 @@ const WaitlistPage = () => {
                 <div className="mb-24 space-y-20">
                     <div className="text-center max-w-2xl mx-auto mb-16">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-wide mb-4">
-                            <span className="text-lg">👁️</span> Hidden Features
+                            <span className="text-lg">🛡️</span> Enterprise Infrastructure
                         </div>
-                        <h2 className="text-3xl font-bold text-slate-900 mb-4">Software That Sees What You Miss</h2>
-                        <p className="text-lg text-slate-600">Most platforms just show you where your ship is. We tell you what it costs and if it's going to be late.</p>
+                        <h2 className="text-3xl font-bold text-slate-900 mb-4">Operational Efficiency & Control</h2>
+                        <p className="text-lg text-slate-600">A hybrid platform designed for scale, compliance, and proactive risk mitigation.</p>
                     </div>
 
                     {/* Feature 1: Landed Cost */}
                     <div className="grid md:grid-cols-2 gap-12 items-center">
                         <div className="order-2 md:order-1 relative group">
                             <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl opacity-20 group-hover:opacity-40 blur transition duration-500"></div>
-                            <img
-                                src="/features/landed-cost.png"
-                                alt="Landed Cost Calculator"
-                                className="relative rounded-xl shadow-2xl border border-slate-200 transform group-hover:-translate-y-1 transition duration-500"
-                            />
+                            {/* LIVE COMPONENT REPLACEMENT */}
+                            <div className="relative transform group-hover:-translate-y-1 transition duration-500">
+                                <LandedCostWidget />
+                            </div>
                         </div>
                         <div className="order-1 md:order-2">
-                            <div className="w-12 h-12 bg-[#003057]/10 rounded-xl flex items-center justify-center mb-6 shadow-sm shadow-blue-200">
+                            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6 shadow-sm shadow-blue-200">
                                 <span className="text-2xl">🧮</span>
                             </div>
-                            <h3 className="text-2xl font-bold text-slate-900 mb-4">Total Landed Cost. <span className="text-[#003057]">Before You Book.</span></h3>
+                            <h3 className="text-2xl font-bold text-slate-900 mb-4">Financial Precision. <span className="text-primary">Automated.</span></h3>
                             <p className="text-slate-600 leading-relaxed mb-6">
-                                Stop guessing your margins. MarketLive calculates Duty, VAT, and Insurance alongside freight costs instantly.
+                                Instant landed cost calculations including Duty, VAT, and insurance for complete margin visibility.
                             </p>
                             <ul className="space-y-3">
                                 <li className="flex items-center gap-2 text-slate-700 font-medium">
-                                    <CheckCircle2 className="w-5 h-5 text-[#003057]" /> Auto-calculated UK Duty Rates 🇬🇧
+                                    <CheckCircle2 className="w-5 h-5 text-primary" /> Auto-calculated UK Duty Rates 🇬🇧
                                 </li>
                                 <li className="flex items-center gap-2 text-slate-700 font-medium">
-                                    <CheckCircle2 className="w-5 h-5 text-[#003057]" /> VAT & Deferment tracking 📊
+                                    <CheckCircle2 className="w-5 h-5 text-primary" /> VAT & Deferment tracking 📊
                                 </li>
                             </ul>
                         </div>
@@ -219,9 +220,9 @@ const WaitlistPage = () => {
                             <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-6 shadow-sm shadow-blue-200">
                                 <span className="text-2xl">🌪️</span>
                             </div>
-                            <h3 className="text-2xl font-bold text-slate-900 mb-4">See the Storm <span className="text-[#003057]">Before it Hits.</span></h3>
+                            <h3 className="text-2xl font-bold text-slate-900 mb-4">Predictive Risk Modeling</h3>
                             <p className="text-slate-600 leading-relaxed mb-6">
-                                Our Predictive Risk Engine analyzes weather patterns, strikes, and port congestion.
+                                Data-driven analysis of port congestion, weather patterns, and global disruption events.
                             </p>
                             <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
                                 <p className="text-sm text-blue-800 font-medium flex gap-2">
@@ -231,18 +232,17 @@ const WaitlistPage = () => {
                         </div>
                         <div className="relative group">
                             <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl opacity-20 group-hover:opacity-40 blur transition duration-500"></div>
-                            <img
-                                src="/features/risk-engine.png"
-                                alt="Predictive Risk Engine"
-                                className="relative rounded-xl shadow-2xl border border-slate-200 transform group-hover:-translate-y-1 transition duration-500"
-                            />
+                            {/* LIVE COMPONENT REPLACEMENT */}
+                            <div className="relative transform group-hover:-translate-y-1 transition duration-500">
+                                <LiveRiskWidget />
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Waitlist Form Section */}
                 <div id="waitlist-form" className="max-w-xl mx-auto bg-slate-50 rounded-2xl p-10 border border-slate-200 shadow-xl relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#003057] via-blue-800 to-[#003057]"></div>
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-blue-800 to-primary"></div>
                     <div className="text-center mb-8">
                         <h2 className="text-3xl font-bold text-slate-900 mb-2">Join the Inner Circle 🚀</h2>
                         <p className="text-slate-500">Unlock the Rate Engine. Secure your early access spot.</p>
@@ -252,13 +252,13 @@ const WaitlistPage = () => {
                             <Input
                                 type="text"
                                 placeholder="Full Name 👤"
-                                className="h-12 bg-white border-slate-200 focus:border-[#003057] focus:ring-[#003057]"
+                                className="h-12 bg-white border-slate-200 focus:border-primary focus:ring-primary"
                             // We'd add name state here if we wanted, for now just focus on company
                             />
                             <Input
                                 type="text"
                                 placeholder="Company Name 🏢"
-                                className="h-12 bg-white border-slate-200 focus:border-[#003057] focus:ring-[#003057]"
+                                className="h-12 bg-white border-slate-200 focus:border-primary focus:ring-primary"
                                 value={company}
                                 onChange={(e) => setCompany(e.target.value)}
                                 required
@@ -267,13 +267,13 @@ const WaitlistPage = () => {
                         <Input
                             type="email"
                             placeholder="work@company.com 📧"
-                            className="h-12 text-lg bg-white border-slate-200 focus:border-[#003057] focus:ring-[#003057]"
+                            className="h-12 text-lg bg-white border-slate-200 focus:border-primary focus:ring-primary"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
                         />
                         <Select onValueChange={setRole}>
-                            <SelectTrigger className="h-12 text-slate-600 text-base bg-white border-slate-200 focus:border-[#003057] focus:ring-[#003057]">
+                            <SelectTrigger className="h-12 text-slate-600 text-base bg-white border-slate-200 focus:border-primary focus:ring-primary">
                                 <SelectValue placeholder="I am a... 💼" />
                             </SelectTrigger>
                             <SelectContent>
@@ -283,13 +283,13 @@ const WaitlistPage = () => {
                                 <SelectItem value="other">Other</SelectItem>
                             </SelectContent>
                         </Select>
-                        <Button size="lg" className="h-14 text-lg font-bold bg-[#003057] hover:bg-[#002040] w-full shadow-lg shadow-slate-300 transition-all hover:scale-[1.01]" disabled={loading}>
+                        <Button size="lg" className="h-14 text-lg font-bold bg-primary hover:bg-primary-700 w-full shadow-lg shadow-slate-300 transition-all hover:scale-[1.01]" disabled={loading}>
                             {loading ? 'Securing Spot...' : 'Get Early Access ⚡'}
                             {!loading && <ArrowRight className="ml-2 w-5 h-5" />}
                         </Button>
                     </form>
                     <div className="mt-6 flex items-center justify-center gap-2 text-xs text-slate-400">
-                        <ShieldCheck className="w-3 h-3 text-[#003057]" /> No spam. Unsubscribe anytime.
+                        <ShieldCheck className="w-3 h-3 text-primary" /> No spam. Unsubscribe anytime.
                     </div>
                 </div>
 
@@ -322,7 +322,7 @@ const WaitlistPage = () => {
             <div className="bg-slate-50 py-20 border-t border-slate-100">
                 <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-8">
                     <FeatureCard
-                        icon={<ShieldCheck className="w-6 h-6 text-[#003057]" />}
+                        icon={<ShieldCheck className="w-6 h-6 text-primary" />}
                         title="AI Compliance"
                         desc="Auto-check sanctions and parsing documents in seconds."
                     />

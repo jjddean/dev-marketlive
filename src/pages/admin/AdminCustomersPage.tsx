@@ -1,72 +1,38 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import DataTable from '@/components/ui/data-table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Mail, Shield, Trash2, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+    Users,
+    Building2,
+    MoreHorizontal,
+    Shield,
+    UserCog
+} from 'lucide-react';
+import DataTable from '@/components/ui/data-table';
+import AdminPageHeader from '@/components/layout/admin/AdminPageHeader';
 
 const AdminCustomersPage = () => {
-    const users = useQuery(api.users.listUsers) || [];
-    const deleteUser = useMutation(api.users.deleteUser);
+    const users = useQuery(api.admin.listUsers) || [];
+    const orgs = useQuery(api.admin.listOrganizations) || [];
 
-    // Delete Dialog State
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [userToDelete, setUserToDelete] = useState<string | null>(null);
-    const [isDeleting, setIsDeleting] = useState(false);
-
-    const confirmDelete = (userId: string) => {
-        setUserToDelete(userId);
-        setDeleteDialogOpen(true);
-    };
-
-    const handleDelete = async () => {
-        if (!userToDelete) return;
-
-        setIsDeleting(true);
-        try {
-            await deleteUser({ userId: userToDelete as any });
-            toast.success("User deleted successfully");
-            setDeleteDialogOpen(false);
-        } catch (error: any) {
-            toast.error(error.message || "Failed to delete user");
-        } finally {
-            setIsDeleting(false);
-            setUserToDelete(null);
-        }
-    };
-
-    const columns: any[] = [
+    const userColumns: any[] = [
         {
             key: 'name',
-            header: 'Customer',
+            header: 'User',
             render: (val: string, row: any) => (
-                <div className="flex items-center">
-                    <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold mr-3">
-                        {val?.charAt(0).toUpperCase()}
-                    </div>
+                <div className="flex items-center gap-3">
+                    <Avatar className="h-9 w-9 border border-gray-200">
+                        <AvatarImage src={row.imageUrl} />
+                        <AvatarFallback className="bg-blue-50 text-blue-600 font-medium">{val?.[0]}</AvatarFallback>
+                    </Avatar>
                     <div>
-                        <div className="font-medium text-gray-900">{val || 'Unknown'}</div>
-                        <div className="text-xs text-gray-500">{row.externalId}</div>
-                    </div>
-                </div>
-            )
-        },
-        {
-            key: 'email',
-            header: 'Contact',
-            render: (val: string) => (
-                <div className="flex flex-col space-y-1">
-                    <div className="flex items-center text-sm text-gray-600">
-                        <Mail className="h-3 w-3 mr-2" /> {val}
+                        <div className="font-medium text-sm text-gray-900">{val}</div>
+                        <div className="text-xs text-gray-500">{row.email}</div>
                     </div>
                 </div>
             )
@@ -74,91 +40,121 @@ const AdminCustomersPage = () => {
         {
             key: 'role',
             header: 'Role',
-            render: (val: string, row: any) => {
-                const isAdmin = row.role === 'admin' || row.role === 'platform:superadmin';
-                return (
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                        ${isAdmin ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>
-                        {isAdmin && <Shield className="w-3 h-3 mr-1" />}
-                        {row.role === 'platform:superadmin' ? 'Super Admin' :
-                            row.role === 'admin' ? 'Admin' : 'Client'}
-                    </span>
-                );
-            }
+            render: (val: string) => (
+                <Badge variant="outline" className={`capitalize ${val === 'admin' ? 'border-blue-200 text-blue-700 bg-blue-50' : 'text-gray-600'}`}>
+                    {val === 'admin' && <Shield className="w-3 h-3 mr-1" />}
+                    {val}
+                </Badge>
+            )
+        },
+        {
+            key: 'subscriptionTier',
+            header: 'Plan',
+            render: (val: string) => <Badge variant={val === 'pro' ? 'default' : 'secondary'} className={val === 'pro' ? 'bg-slate-900 hover:bg-slate-800' : ''}>{val || 'Free'}</Badge>
         },
         {
             key: '_creationTime',
             header: 'Joined',
-            render: (val: number) => new Date(val).toLocaleDateString()
+            render: (val: number) => <span className="text-sm text-gray-500">{new Date(val).toLocaleDateString()}</span>
         },
         {
             key: '_id',
             header: 'Actions',
-            render: (id: string, row: any) => {
-                const isSuperAdmin = row.role === 'platform:superadmin';
-                // Prevent deleting superadmins
-                if (isSuperAdmin) return <span className="text-xs text-gray-400">Protected</span>;
+            render: () => <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-blue-600"><MoreHorizontal className="h-4 w-4" /></Button>
+        }
+    ];
 
-                return (
-                    <div className="flex gap-2">
-                        <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => confirmDelete(id)}
-                            title="Delete User"
-                        >
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
+    const orgColumns: any[] = [
+        {
+            key: 'name',
+            header: 'Organization',
+            render: (val: string) => (
+                <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-blue-50 rounded text-blue-600">
+                        <Building2 className="h-4 w-4" />
                     </div>
-                );
-            }
+                    <span className="font-medium text-gray-900">{val}</span>
+                </div>
+            )
+        },
+        {
+            key: 'subscriptionStatus',
+            header: 'Status',
+            render: (val: string) => <Badge variant={val === 'active' ? 'outline' : 'secondary'} className={val === 'active' ? 'text-green-600 border-green-200 bg-green-50' : ''}>{val || 'Inactive'}</Badge>
+        },
+        {
+            key: '_creationTime',
+            header: 'Created',
+            render: (val: number) => <span className="text-sm text-gray-500">{new Date(val).toLocaleDateString()}</span>
+        },
+        {
+            key: '_id',
+            header: 'Actions',
+            render: () => <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-blue-600"><MoreHorizontal className="h-4 w-4" /></Button>
         }
     ];
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
-                    <p className="text-gray-500">Directory of all registered clients.</p>
-                </div>
-                <Button>Export List</Button>
-            </div>
+            <AdminPageHeader
+                title="Customer Management"
+                subtitle="Manage users, organizations, and access controls."
+                actionLabel="Add User"
+                onAction={() => { }}
+                icon={Users}
+            />
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <DataTable
-                    data={users}
-                    columns={columns}
-                    searchPlaceholder="Search customers..."
-                    rowsPerPage={10}
-                />
-            </div>
-
-            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Delete User</DialogTitle>
-                        <DialogDescription>
-                            Are you sure you want to delete this user? This action cannot be undone and will remove all their data.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="bg-red-50 p-4 rounded-md flex items-center gap-3">
-                        <AlertCircle className="h-5 w-5 text-red-600" />
-                        <p className="text-sm text-red-700 font-medium">Warning: This is a destructive action.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="p-6 bg-white shadow-sm border border-gray-200">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-sm font-medium text-gray-500">Total Users</p>
+                            <h3 className="text-3xl font-bold text-gray-900 mt-2">{users.length}</h3>
+                        </div>
+                        <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                            <Users className="h-6 w-6" />
+                        </div>
                     </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-                        <Button
-                            variant="destructive"
-                            onClick={handleDelete}
-                            disabled={isDeleting}
-                        >
-                            {isDeleting ? 'Deleting...' : 'Delete User'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                </Card>
+                <Card className="p-6 bg-white shadow-sm border border-gray-200">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <p className="text-sm font-medium text-gray-500">Organizations</p>
+                            <h3 className="text-3xl font-bold text-gray-900 mt-2">{orgs.length}</h3>
+                        </div>
+                        <div className="p-3 bg-purple-50 text-purple-600 rounded-xl">
+                            <Building2 className="h-6 w-6" />
+                        </div>
+                    </div>
+                </Card>
+            </div>
+
+            <Tabs defaultValue="users" className="w-full">
+                <TabsList className="grid w-full max-w-md grid-cols-2 mb-4 bg-gray-100 p-1 rounded-lg">
+                    <TabsTrigger value="users" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Users</TabsTrigger>
+                    <TabsTrigger value="orgs" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Organizations</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="users">
+                    <Card className="overflow-hidden border border-gray-200 shadow-sm">
+                        <DataTable
+                            data={users}
+                            columns={userColumns}
+                            searchPlaceholder="Search users..."
+                        />
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="orgs">
+                    <Card className="overflow-hidden border border-gray-200 shadow-sm">
+                        <DataTable
+                            data={orgs}
+                            columns={orgColumns}
+                            searchPlaceholder="Search organizations..."
+                        />
+                    </Card>
+                </TabsContent>
+            </Tabs>
         </div>
     );
 };

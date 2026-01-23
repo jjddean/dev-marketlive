@@ -57,3 +57,31 @@ export const sendWelcomeEmail = action({
         }
     },
 });
+
+export const sendEmail = action({
+    args: {
+        to: v.string(),
+        subject: v.string(),
+        html: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const resendApiKey = process.env.RESEND_API_KEY;
+        if (!resendApiKey) {
+            console.log("Mock Email Sent:", { to: args.to, subject: args.subject });
+            return;
+        }
+
+        const resend = new Resend(resendApiKey);
+
+        try {
+            await resend.emails.send({
+                from: "MarketLive <bookings@resend.dev>",
+                to: args.to,
+                subject: args.subject,
+                html: args.html,
+            });
+        } catch (error) {
+            console.error("Failed to send email:", error);
+        }
+    },
+});

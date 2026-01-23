@@ -54,6 +54,15 @@ export const ComplianceKycModal = ({ open, onOpenChange }: KycModalProps) => {
 
     const handleStep1Submit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Custom Validation
+        if (!formData.companyName.trim() || !formData.registrationNumber.trim()) {
+            toast.error("Please fill in all required fields", {
+                description: "Company Name and Registration Number are mandatory."
+            });
+            return;
+        }
+
         if (!kycId) return;
         setLoading(true);
         try {
@@ -141,9 +150,8 @@ export const ComplianceKycModal = ({ open, onOpenChange }: KycModalProps) => {
                     <form onSubmit={handleStep1Submit} className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label>Company Name</Label>
+                                <Label>Company Name <span className="text-red-500">*</span></Label>
                                 <Input
-                                    required
                                     placeholder="Acme Logistics Ltd"
                                     onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                                 />
@@ -156,9 +164,8 @@ export const ComplianceKycModal = ({ open, onOpenChange }: KycModalProps) => {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Registration Number (CRN)</Label>
+                                <Label>Registration Number (CRN) <span className="text-red-500">*</span></Label>
                                 <Input
-                                    required
                                     placeholder="12345678"
                                     onChange={(e) => setFormData({ ...formData, registrationNumber: e.target.value })}
                                 />

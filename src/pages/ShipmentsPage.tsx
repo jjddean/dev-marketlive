@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import MediaCardHeader from '@/components/ui/media-card-header';
 import DataTable from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
-import Footer from '@/components/layout/Footer';
 import AdvancedSearch from '@/components/ui/advanced-search';
 import { LiveVesselMap } from '@/components/ui/live-vessel-map';
 import { ShipmentMap } from '@/components/ui/ShipmentMap';
@@ -10,6 +9,9 @@ import { useQuery, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Sparkles, Mail } from "lucide-react";
 import { toast } from 'sonner';
+import { useUser } from "@clerk/clerk-react";
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Sheet,
   SheetContent,
@@ -19,9 +21,20 @@ import {
 } from '@/components/ui/sheet';
 
 const ShipmentsPage = () => {
+  const { user } = useUser();
   const [activeTab, setActiveTab] = useState('active');
   const [selectedShipment, setSelectedShipment] = useState<any>(null);
+  const [sheetMode, setSheetMode] = useState<'details' | 'tracking'>('details');
   const [emailing, setEmailing] = useState(false);
+
+  // Recipient email state (defaults to user logged in email)
+  const [recipientEmail, setRecipientEmail] = useState("");
+
+  useEffect(() => {
+    if (user?.primaryEmailAddress?.emailAddress) {
+      setRecipientEmail(user.primaryEmailAddress.emailAddress);
+    }
+  }, [user]);
 
   // Action to send email
   const sendReport = useAction((api as any).reporting.sendShipmentReport);
@@ -296,12 +309,14 @@ const ShipmentsPage = () => {
       render: (value: string, row: typeof filteredShipments.active[0]) => (
         <div className="flex space-x-2">
           <Button variant="outline" size="sm" onClick={() => {
-            console.log("Viewing row:", row);
-            toast.info("Opening Analysis...");
+            setSheetMode('details');
             setSelectedShipment(row);
           }}>View</Button>
           {activeTab === 'active' && (
-            <Button variant="outline" size="sm">Track</Button>
+            <Button variant="outline" size="sm" onClick={() => {
+              setSheetMode('tracking');
+              setSelectedShipment(row);
+            }}>Track</Button>
           )}
         </div>
       )
@@ -312,11 +327,13 @@ const ShipmentsPage = () => {
   const handleEmailReport = async () => {
     if (!selectedShipment) return;
 
-    // Simple prompt for demo purposes
-    const email = prompt("Enter email address to receive the report:", "jason@example.com");
-    if (!email) return;
+    // Check local state recipient email, which defaults to user login
+    if (!recipientEmail) {
+      toast.error("Please enter a recipient email address");
+      return;
+    }
 
-    const toastId = toast.loading(`Sending report to ${email}...`);
+    const toastId = toast.loading(`Sending report to ${recipientEmail}...`);
     setEmailing(true);
 
     const seed = selectedShipment.id.split('').reduce((a: any, c: any) => a + c.charCodeAt(0), 0);
@@ -325,11 +342,11 @@ const ShipmentsPage = () => {
     try {
       await sendReport({
         shipmentId: selectedShipment.id,
-        email,
+        email: recipientEmail,
         riskScore
       });
       toast.dismiss(toastId);
-      toast.success(`Report sent successfully!`);
+      toast.success(`Report sent to ${recipientEmail}`);
     } catch (e: any) {
       toast.dismiss(toastId);
       toast.error("Failed to send report");
@@ -461,90 +478,160 @@ const ShipmentsPage = () => {
       <Sheet open={!!selectedShipment} onOpenChange={(open) => !open && setSelectedShipment(null)}>
         <SheetContent side="right" className="w-[400px] sm:w-[540px] overflow-y-auto p-6">
           <SheetHeader>
-            <SheetTitle>Shipment Analysis</SheetTitle>
-            <SheetDescription>Real-time predictive insights for {selectedShipment?.id}</SheetDescription>
+            <SheetTitle>
+              {sheetMode === 'details' ? 'Shipment Details' : 'Live Tracking & Analysis'}
+            </SheetTitle>
+            <SheetDescription>
+              {sheetMode === 'details'
+                ? `Comprehensive manifesto for ${selectedShipment?.id}`
+                : `Real-time geospatial insights for ${selectedShipment?.id}`
+              }
+            </SheetDescription>
           </SheetHeader>
 
           {selectedShipment && (
             <div className="py-6 space-y-8">
-              {/* Basic Info */}
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="space-y-1">
-                  <span className="text-gray-500 block">Origin</span>
-                  <span className="font-medium text-gray-900">{selectedShipment.origin}</span>
+
+              {/* SHARED: Basic Route Header */}
+              <div className="bg-gray-50 p-4 rounded-lg flex justify-between items-center border border-gray-100">
+                <div>
+                  <div className="text-xs text-gray-500 uppercase tracking-wider">Origin</div>
+                  <div className="font-semibold text-gray-900">{selectedShipment.origin}</div>
                 </div>
-                <div className="space-y-1">
-                  <span className="text-gray-500 block">Destination</span>
-                  <span className="font-medium text-gray-900">{selectedShipment.destination}</span>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-gray-500 block">Status</span>
-                  <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${selectedShipment.status === 'Delivered' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-                    }`}>{selectedShipment.status}</span>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-gray-500 block">ETA</span>
-                  <span className="font-medium text-gray-900">{selectedShipment.eta}</span>
+                <div className="text-gray-300">→</div>
+                <div className="text-right">
+                  <div className="text-xs text-gray-500 uppercase tracking-wider">Destination</div>
+                  <div className="font-semibold text-gray-900">{selectedShipment.destination}</div>
                 </div>
               </div>
 
-              {/* Restored Map Section */}
-              <div className="h-48 w-full rounded-lg overflow-hidden border border-gray-200">
-                <LiveVesselMap
-                  shipmentId={selectedShipment.id}
-                  origin={selectedShipment.origin}
-                  destination={selectedShipment.destination}
-                  progress={selectedShipment.progress || 45}
-                />
-              </div>
-
-              {/* AI Risk Analysis Widget */}
-              <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold text-slate-900 flex items-center">
-                    <Sparkles className="w-4 h-4 text-purple-600 mr-2" />
-                    Predictive Delay Risk
-                  </h3>
-                  <span className="text-xs text-slate-500">Confidence: 94%</span>
-                </div>
-
-                <RiskMeter shipmentId={selectedShipment.id} />
-
-                <div className="mt-4 space-y-3">
-                  <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Risk Factors Detected</h4>
-                  <div className="flex items-start space-x-3 text-sm bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
-                    <div className="mt-0.5">⚠️</div>
+              {/* MODE: DETAILS */}
+              {sheetMode === 'details' && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
                     <div>
-                      <p className="font-medium text-slate-800">Port Congestion at {selectedShipment.destination.split(',')[0]}</p>
-                      <p className="text-slate-500 text-xs mt-0.5">Average dwell time increased by 48h in last 2 days.</p>
+                      <span className="text-gray-500 block mb-1">Status</span>
+                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${selectedShipment.status === 'Delivered' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                        }`}>{selectedShipment.status}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block mb-1">Carrier</span>
+                      <span className="font-medium text-gray-900">{selectedShipment.carrier}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block mb-1">Container ID</span>
+                      <span className="font-mono text-gray-900">{selectedShipment.container || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block mb-1">Value</span>
+                      <span className="font-medium text-gray-900">{selectedShipment.value || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block mb-1">ETA</span>
+                      <span className="font-medium text-gray-900">{selectedShipment.eta || 'Pending'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 block mb-1">Service Type</span>
+                      <span className="font-medium text-gray-900">FCL (Full Container Load)</span>
                     </div>
                   </div>
-                  <div className="flex items-start space-x-3 text-sm bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
-                    <div className="mt-0.5">🌦️</div>
-                    <div>
-                      <p className="font-medium text-slate-800">Weather Alert: Atlantic Route</p>
-                      <p className="text-slate-500 text-xs mt-0.5">Minor deviation expected due to storm front.</p>
+
+                  <div className="border-t pt-6">
+                    <h4 className="font-semibold mb-4 text-sm">Associated Documents</h4>
+                    <div className="space-y-2">
+                      {['Bill of Lading', 'Commercial Invoice', 'Packing List'].map(doc => (
+                        <div key={doc} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                          <div className="flex items-center">
+                            <span className="text-lg mr-3">📄</span>
+                            <span className="text-sm font-medium text-gray-700">{doc}</span>
+                          </div>
+                          <span className="text-xs text-blue-600 font-medium">Download</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              <div className="text-center">
-                <Button
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-                  onClick={handleEmailReport}
-                  disabled={emailing}
-                >
-                  {emailing ? (
-                    <>Sending Report...</>
-                  ) : (
-                    <>
-                      <Mail className="w-4 h-4 mr-2" />
-                      Email Detailed Logistics Report
-                    </>
-                  )}
-                </Button>
-              </div>
+              {/* MODE: TRACKING */}
+              {sheetMode === 'tracking' && (
+                <div className="space-y-6">
+                  {/* Map Section */}
+                  <div className="h-64 w-full rounded-lg overflow-hidden border border-gray-200 relative">
+                    <div className="absolute top-2 right-2 bg-white/90 px-2 py-1 rounded text-xs font-bold z-10 shadow-sm">
+                      Live Satellite Feed
+                    </div>
+                    <LiveVesselMap
+                      shipmentId={selectedShipment.id}
+                      origin={selectedShipment.origin}
+                      destination={selectedShipment.destination}
+                      progress={selectedShipment.progress || 45}
+                    />
+                  </div>
+
+                  {/* AI Risk Analysis Widget */}
+                  <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-semibold text-slate-900 flex items-center">
+                        <Sparkles className="w-4 h-4 text-purple-600 mr-2" />
+                        Predictive Risk Analysis
+                      </h3>
+                      <span className="text-xs text-slate-500">Confidence: 94%</span>
+                    </div>
+
+                    <RiskMeter shipmentId={selectedShipment.id} />
+
+                    <div className="mt-4 space-y-3">
+                      <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Risk Factors Detected</h4>
+                      <div className="flex items-start space-x-3 text-sm bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
+                        <div className="mt-0.5">⚠️</div>
+                        <div>
+                          <p className="font-medium text-slate-800">Port Congestion at {selectedShipment.destination.split(',')[0]}</p>
+                          <p className="text-slate-500 text-xs mt-0.5">Average dwell time increased by 48h in last 2 days.</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start space-x-3 text-sm bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
+                        <div className="mt-0.5">🌦️</div>
+                        <div>
+                          <p className="font-medium text-slate-800">Weather Alert: Atlantic Route</p>
+                          <p className="text-slate-500 text-xs mt-0.5">Minor deviation expected due to storm front.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Share Analysis Section */}
+                  <div className="space-y-3 pt-4 border-t border-gray-100">
+                    <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      Share Analysis Report
+                    </Label>
+                    <div className="flex w-full items-center space-x-2">
+                      <Input
+                        type="email"
+                        placeholder="recipient@example.com"
+                        value={recipientEmail}
+                        onChange={(e) => setRecipientEmail(e.target.value)}
+                        className="h-10"
+                      />
+                      <Button
+                        className="h-10 px-4 shrink-0"
+                        onClick={handleEmailReport}
+                        disabled={emailing}
+                      >
+                        {emailing ? (
+                          <span className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        ) : (
+                          <Mail className="w-4 h-4" />
+                        )}
+                        <span className="ml-2 hidden sm:inline">Send</span>
+                      </Button>
+                    </div>
+                    <p className="text-[10px] text-gray-400">
+                      Export this live risk assessment to clients or stakeholders.
+                    </p>
+                  </div>
+                </div>
+              )}
 
             </div>
           )}

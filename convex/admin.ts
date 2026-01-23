@@ -1,4 +1,4 @@
-import { query } from "./_generated/server";
+import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
 export const getDashboardStats = query({
@@ -62,5 +62,139 @@ export const getRecentActivity = query({
         return await ctx.db.query("auditLogs")
             .order("desc")
             .take(20);
+    }
+});
+
+export const getPendingActions = query({
+    args: {},
+    handler: async (ctx) => {
+        // 1. Pending Bookings
+        const bookings = await ctx.db
+            .query("bookings")
+            .withIndex("byApprovalStatus", (q) => q.eq("approvalStatus", "pending"))
+            .collect();
+
+        // 2. Pending KYC
+        const kyc = await ctx.db
+            .query("kycVerifications")
+            .withIndex("byStatus", (q) => q.eq("status", "submitted"))
+            .collect();
+
+        // 3. Pending Documents (using status filter)
+        const allDocs = await ctx.db.query("documents").collect();
+        const pendingDocs = allDocs.filter(d => d.status === "pending_review");
+
+        // Normalize
+        const actions = [
+            ...bookings.map(b => ({
+                id: b._id,
+                type: 'booking',
+                priority: 'high',
+                title: `Booking Approval: ${b.bookingId}`,
+                subtitle: `${b.customerDetails?.company || 'Unknown'} - ${b.pickupDetails?.address?.split(',')[0]} -> ${b.deliveryDetails?.address?.split(',')[0]}`,
+                createdAt: b.createdAt,
+                status: 'pending'
+            })),
+            ...kyc.map(k => ({
+                id: k._id,
+                type: 'kyc',
+                priority: 'critical',
+                title: `KYC Verification: ${k.companyName}`,
+                subtitle: `Reg: ${k.registrationNumber} (${k.country})`,
+                createdAt: k.submittedAt || k._creationTime,
+                status: 'submitted'
+            })),
+            ...pendingDocs.map(d => ({
+                id: d._id,
+                type: 'document',
+                priority: 'medium',
+                title: `Document Review: ${d.type}`,
+                subtitle: `Ref: ${d.documentData?.documentNumber}`,
+                createdAt: d.updatedAt || d.createdAt,
+                status: 'pending_review'
+            }))
+        ];
+
+        // Sort by newest first
+        return actions.sort((a, b) => b.createdAt - a.createdAt);
+    }
+});
+
+// Admin: List Waitlist
+export const listWaitlist = query({
+    args: {},
+    handler: async (ctx) => {
+        // In prod: check admin role
+        return await ctx.db
+            .query("waitlist")
+            .order("desc")
+            .collect();
+    }
+});
+
+// Admin: Approve Waitlist User (Invite)
+export const approveWaitlistUser = mutation({
+    args: { id: v.id("waitlist") },
+    handler: async (ctx, args) => {
+        // In prod: check admin role
+        await ctx.db.patch(args.id, {
+            status: "invited",
+            invitedAt: Date.now()
+        });
+
+        // Get user details to send email
+        const entry = await ctx.db.get(args.id);
+        if (entry) {
+            // AUDIT LOG
+            const identity = await ctx.auth.getUserIdentity();
+            await ctx.db.insert("auditLogs", {
+                action: "waitlist.invited",
+                entityType: "waitlist",
+                entityId: args.id,
+                userId: identity?.subject || "admin",
+                // invitedEmail: entry.email, (would go in details)
+                details: { email: entry.email },
+                timestamp: Date.now()
+            });
+
+            // Trigger Email (Mock)
+            // await ctx.scheduler.runAfter(0, internal.email.sendInvite, { email: entry.email });
+        }
+    }
+});
+
+// Admin: List Audit Logs
+export const getAuditLogs = query({
+    args: {},
+    handler: async (ctx) => {
+        // In prod: check admin role
+        return await ctx.db
+            .query("auditLogs")
+            .order("desc")
+            .take(100); // Increased limit for audit page
+    }
+});
+
+// Admin: List All Users
+export const listUsers = query({
+    args: {},
+    handler: async (ctx) => {
+        // In prod: check admin role
+        return await ctx.db
+            .query("users")
+            .order("desc")
+            .collect();
+    }
+});
+
+// Admin: List All Organizations
+export const listOrganizations = query({
+    args: {},
+    handler: async (ctx) => {
+        // In prod: check admin role
+        return await ctx.db
+            .query("organizations")
+            .order("desc")
+            .collect();
     }
 });

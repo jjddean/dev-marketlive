@@ -1,0 +1,24 @@
+DANGEROUS GOODS DECLARATION TEMPLATE
+[This is a placeholder for a real Dangerous Goods Note]
+
+Shipper:
+[Name]
+[Address]
+
+Consignee:
+[Name]
+[Address]
+
+Transport Details: _______________________
+
+Proper Shipping Name | Class/Division | UN Number | Packing Group | Flashpoint
+-----------------------------------------------------------------------------
+                     |                |           |               |
+
+Additional Handling Information:
+[Emergency Contact]
+
+I hereby declare that the contents of this consignment are fully and accurately described above by the proper shipping name, and are classified, packaged, marked and labelled/placarded, and are in all respects in proper condition for transport according to applicable international and national government regulations.
+
+Signature: ______________________
+Date: ______________________

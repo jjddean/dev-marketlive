@@ -1,0 +1,32 @@
+
+
+🌍 Testing Environment: SANDBOX
+   URL: https://sandbox.freightos.com/api/v1/freightEstimates
+   🔄 Strategy: Bearer API_KEY
+      Status: 401
+      Response:              {                 "messages": {                     "messages": [                      ...
+   🔄 Strategy: Bearer SECRET_KEY
+      Status: 401
+      Response:              {                 "messages": {                     "messages": [                      ...
+   🔄 Strategy: X-App-ID + X-App-Key (Secret)
+      Status: 401
+      Response:              {                 "messages": {                     "messages": [                      ...
+   🔄 Strategy: X-App-ID + X-API-Key (API Key)
+      Status: 401
+      Response:              {                 "messages": {                     "messages": [                      ...
+
+
+🌍 Testing Environment: PRODUCTION
+   URL: https://api.freightos.com/api/v1/freightEstimates
+   🔄 Strategy: Bearer API_KEY
+      Status: 401
+      Response:              {                 "messages": {                     "messages": [                      ...
+   🔄 Strategy: Bearer SECRET_KEY
+      Status: 401
+      Response:              {                 "messages": {                     "messages": [                      ...
+   🔄 Strategy: X-App-ID + X-App-Key (Secret)
+      Status: 401
+      Response:              {                 "messages": {                     "messages": [                      ...
+   🔄 Strategy: X-App-ID + X-API-Key (API Key)
+      Status: 401
+      Response:              {                 "messages": {                     "messages": [                      ...

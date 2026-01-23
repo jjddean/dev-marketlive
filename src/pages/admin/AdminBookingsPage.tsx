@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Check, X, FileText, AlertCircle } from 'lucide-react';
+import AdminPageHeader from '@/components/layout/admin/AdminPageHeader';
 
 const AdminBookingsPage = () => {
     const bookings = useQuery(api.admin.listAllBookings) || [];
@@ -103,7 +104,7 @@ const AdminBookingsPage = () => {
                       ${isApproved ? 'bg-green-100 text-green-800' :
                             isPending ? 'bg-yellow-100 text-yellow-800' :
                                 isRejected ? 'bg-red-100 text-red-800' :
-                                    value === 'confirmed' ? 'bg-blue-100 text-blue-800' :
+                                    value === 'confirmed' ? 'bg-primary-100 text-primary-800' :
                                         'bg-gray-100 text-gray-800'}`}>
                         {isPending && <AlertCircle className="h-3 w-3 mr-1" />}
                         {value}
@@ -129,7 +130,7 @@ const AdminBookingsPage = () => {
                             <>
                                 <Button
                                     size="sm"
-                                    className="bg-emerald-600 hover:bg-emerald-700 h-8 px-2"
+                                    className="bg-primary hover:bg-primary-700 h-8 px-2"
                                     onClick={() => handleApprove(id)}
                                     disabled={processingId !== null}
                                     title="Approve Booking"
@@ -172,15 +173,13 @@ const AdminBookingsPage = () => {
                 </div>
             )}
 
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Booking Requests</h1>
-                    <p className="text-gray-500">Manage incoming booking approvals and shipment requests.</p>
-                </div>
-                <Button>
-                    <div className="mr-2">📥</div> Export CSV
-                </Button>
-            </div>
+            <AdminPageHeader
+                title="Booking Requests"
+                subtitle="Manage incoming booking approvals and shipment requests."
+                actionLabel="Export CSV"
+                onAction={() => { }}
+                icon={FileText}
+            />
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <DataTable

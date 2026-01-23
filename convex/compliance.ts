@@ -108,8 +108,79 @@ export const submitKyc = mutation({
                 entityType: "kyc",
                 entityId: args.id,
                 userId: identity.subject,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                details: { step: 3 }
             });
         }
+    }
+});
+
+// Start of New Admin Mutations
+
+// Approve KYC
+export const approveKyc = mutation({
+    args: { id: v.id("kycVerifications") },
+    handler: async (ctx, args) => {
+        // In prod: Check for Admin Role here
+        const kyc = await ctx.db.get(args.id);
+        if (!kyc) throw new Error("KYC record not found");
+
+        await ctx.db.patch(args.id, {
+            status: "verified",
+            verifiedAt: Date.now()
+        });
+
+        // Audit Log
+        const identity = await ctx.auth.getUserIdentity();
+        if (identity) {
+            await ctx.db.insert("auditLogs", {
+                action: "kyc.approved",
+                entityType: "kyc",
+                entityId: args.id,
+                userId: identity.subject,
+                timestamp: Date.now(),
+                details: { adminId: identity.subject }
+            });
+        }
+    }
+});
+
+// Reject KYC
+export const rejectKyc = mutation({
+    args: {
+        id: v.id("kycVerifications"),
+        reason: v.string()
+    },
+    handler: async (ctx, args) => {
+        // In prod: Check for Admin Role here
+        await ctx.db.patch(args.id, {
+            status: "rejected",
+            notes: args.reason,
+        });
+
+        // Audit Log
+        const identity = await ctx.auth.getUserIdentity();
+        if (identity) {
+            await ctx.db.insert("auditLogs", {
+                action: "kyc.rejected",
+                entityType: "kyc",
+                entityId: args.id,
+                userId: identity.subject,
+                timestamp: Date.now(),
+                details: { reason: args.reason }
+            });
+        }
+    }
+});
+
+// List Pending for Admin
+export const listPendingKyc = query({
+    args: {},
+    handler: async (ctx) => {
+        // In prod: Check for Admin Role
+        return await ctx.db
+            .query("kycVerifications")
+            .withIndex("byStatus", (q) => q.eq("status", "submitted"))
+            .collect();
     }
 });

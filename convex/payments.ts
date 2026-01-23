@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 
 // Public mutation for demo purposes (in prod, use webhooks!)
 export const completeSubscription = mutation({
@@ -36,5 +36,29 @@ export const completeSubscription = mutation({
                 timestamp: Date.now(),
             });
         }
+    }
+});
+
+// Admin: List all invoices
+export const listAllInvoices = query({
+    args: {},
+    handler: async (ctx) => {
+        // In prod: check admin role
+        return await ctx.db
+            .query("invoices")
+            .order("desc")
+            .collect();
+    }
+});
+
+// Admin: List all payment attempts (Transactions)
+export const listAllPayments = query({
+    args: {},
+    handler: async (ctx) => {
+        // In prod: check admin role
+        return await ctx.db
+            .query("paymentAttempts")
+            .order("desc")
+            .collect();
     }
 });

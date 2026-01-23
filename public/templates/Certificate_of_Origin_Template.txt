@@ -1,0 +1,22 @@
+CERTIFICATE OF ORIGIN TEMPLATE
+[This is a placeholder for a real Certificate of Origin]
+
+Exporter:
+[Name]
+[Address]
+
+Consignee:
+[Name]
+[Address]
+
+Transport Details: _______________________
+
+Item Number | Marks and Numbers | Number and Kind of Packages | Description of Goods | Origin Criterion
+----------------------------------------------------------------------------------------------------
+            |                   |                             |                      |
+
+The undersigned hereby declares that the above details and statements are correct; that all the goods were produced in:
+[Country of Origin]
+
+Authorized Signature: ______________________
+Date: ______________________

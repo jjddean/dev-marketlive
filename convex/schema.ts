@@ -359,4 +359,14 @@ export default defineSchema({
   }).index("byEmail", ["email"])
     .index("byStatus", ["status"])
     .index("byReferralCode", ["referralCode"]),
+  apiKeys: defineTable({
+    key: v.string(),
+    userId: v.string(),
+    createdAt: v.number(),
+    expiresAt: v.optional(v.number()),
+    name: v.optional(v.string()),
+    lastUsedAt: v.optional(v.number()),
+    status: v.string(), // "active", "revoked"
+  }).index("by_user", ["userId"])
+    .index("by_key", ["key"]),
 }); 

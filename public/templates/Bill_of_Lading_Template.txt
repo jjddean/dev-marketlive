@@ -1,0 +1,25 @@
+BILL OF LADING TEMPLATE
+[This is a placeholder for a real Bill of Lading document]
+
+Shipper:
+[Name]
+[Address]
+
+Consignee:
+[Name]
+[Address]
+
+Notify Party:
+[Name]
+[Address]
+
+Vessel Name: _________________
+Port of Loading: ______________
+Port of Discharge: ____________
+
+Description of Packages and Goods:
+[Marks and Numbers] | [Number and Kind of Packages] | [Description of Goods] | [Gross Weight] | [Measurement]
+
+Shipped on Board Date: ___________
+
+Carrier Signature: ______________________

@@ -431,10 +431,10 @@ const ClientQuotesPage = () => {
                     <>
                         <div className="flex justify-between items-center mb-8">
                             <div className="space-y-1">
-                                <h2 className="text-2xl font-bold text-gray-900">Recent Quotes</h2>
+                                <h2 className="text-xl font-semibold text-gray-900">Recent Quotes</h2>
                                 <p className="text-sm text-gray-500">Track and manage your shipping requests</p>
                             </div>
-                            <Button onClick={() => setMode('create')} className="bg-blue-600 hover:bg-blue-700 h-10 px-6">
+                            <Button onClick={() => setMode('create')} className="h-10 px-6">
                                 New Quote
                             </Button>
                         </div>

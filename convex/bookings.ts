@@ -571,6 +571,20 @@ export const confirmBookingPayment = mutation({
       `
     });
 
+    // Notify User via In-App Alert
+    if (booking.userId) {
+      const user = await ctx.db.get(booking.userId);
+      if (user) {
+        await createNotificationHelper(ctx, user.externalId, {
+          title: 'Payment Confirmed',
+          message: `We received your payment of ${amount} ${currency} for Booking ${booking.bookingId}.`,
+          type: 'success', // or 'billing' if available
+          priority: 'medium',
+          actionUrl: `/bookings`
+        });
+      }
+    }
+
     return { success: true, bookingId: booking.bookingId };
   },
 });
