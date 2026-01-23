@@ -161,7 +161,7 @@ export default function App() {
               <Route path="/solutions" element={<SolutionsPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/contact" element={<ContactPage />} />
-              <Route path="/api" element={<ApiDocsPage />} />
+              <Route path="/api" element={<ClientSidebar><ApiDocsPage /></ClientSidebar>} />
 
               <Route path="/access" element={<WaitlistPage />} />
 

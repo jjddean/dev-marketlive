@@ -15,6 +15,7 @@ const getPageTitle = (pathname: string) => {
   if (pathname.startsWith('/compliance')) return 'Compliance'
   if (pathname.startsWith('/reports')) return 'Reports'
   if (pathname.startsWith('/account')) return 'Account'
+  if (pathname.startsWith('/api')) return 'Developer API'
   return 'Dashboard'
 }
 

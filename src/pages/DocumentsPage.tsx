@@ -66,7 +66,7 @@ const DocumentsPage = () => {
     }, [searchParams, setSearchParams, createNotification]);
 
     // Live documents from Convex
-    const liveDocuments = useQuery(api.documents.listMyDocuments, {
+    const liveDocuments = useQuery(api.documents.listDocuments, {
         type: docTypeFilter === 'all' ? undefined : docTypeFilter
     });
 

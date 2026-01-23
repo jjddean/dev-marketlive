@@ -11,12 +11,16 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from 'sonner';
 import { Play } from 'lucide-react';
+import { useOrganization, useUser } from "@clerk/clerk-react";
 
 const DashboardPage = () => {
-  // Live data hooks
-  const liveShipments = useQuery(api.shipments.listShipments, { onlyMine: true });
-  const liveDocuments = useQuery(api.documents.listMyDocuments, {});
-  const liveBookings = useQuery(api.bookings.listMyBookings, {});
+  const { organization } = useOrganization();
+  const { user } = useUser();
+  const orgId = organization?.id;
+
+  const liveShipments = useQuery(api.shipments.listShipments, {});
+  const liveDocuments = useQuery(api.documents.listDocuments, {});
+  const liveBookings = useQuery(api.bookings.listBookings, {});
 
   // Dynamic metrics calculation
   const liveMetrics = {
@@ -60,7 +64,17 @@ const DashboardPage = () => {
     status: s.status,
     eta: s.estimatedDelivery,
     value: s.shipmentDetails?.value || 'N/A'
-  })) : HARDCODED_SHIPMENTS;
+  })) : [];
+
+  // Decide what to show: Hardcoded (for demo feel) or Empty State?
+  // Current logic: If live data is empty, show hardcoded. This confuses users when switching orgs.
+  // NEW LOGIC: If we are in an ORG, and data is empty, show "No Shipments in [Org Name]".
+  // If we are in Personal, and data is empty, show Hardcoded (for first time exp).
+  const showHardcoded = !organization && (!liveShipments || liveShipments.length === 0);
+
+  const displayShipments = (liveShipments && liveShipments.length > 0)
+    ? recentShipments
+    : (showHardcoded ? HARDCODED_SHIPMENTS : []);
 
 
   const shipmentColumns = [
@@ -103,6 +117,8 @@ const DashboardPage = () => {
           overlayOpacity={0.6}
           className="h-20"
         />
+
+
 
         <div className="px-4 sm:px-6 lg:px-8 py-6">
           {/* Live Metrics */}
@@ -175,7 +191,7 @@ const DashboardPage = () => {
               </Button>
             </div>
             <DataTable
-              data={recentShipments}
+              data={displayShipments}
               columns={shipmentColumns}
               searchPlaceholder="Search shipments..."
               rowsPerPage={5}

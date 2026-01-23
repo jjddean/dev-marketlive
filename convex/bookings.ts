@@ -79,6 +79,7 @@ export const createBooking = mutation({
       deliveryDetails: args.deliveryDetails,
       specialInstructions: args.specialInstructions,
       userId: linkedUserId,
+      orgId: (identity as any).org_id || quote.orgId, // Link to organization if present
       price: selected.price, // Store price snapshot
       createdAt: Date.now(),
       updatedAt: Date.now(),

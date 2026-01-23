@@ -103,6 +103,7 @@ export const upsertShipment = mutation({
         lastUpdated: Date.now(),
         createdAt: Date.now(),
         userId: currentUserId as any,
+        orgId: (identity as any).org_id,
       } as any);
 
       // Notify User of Creation

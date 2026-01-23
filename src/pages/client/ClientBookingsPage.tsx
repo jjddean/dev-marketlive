@@ -27,7 +27,7 @@ import { toast } from 'sonner';
 import { useStripeCheckout } from '@/hooks/useStripeCheckout';
 
 const ClientBookingsPage = () => {
-    const bookings = useQuery(api.bookings.listMyBookings) || [];
+    const bookings = useQuery(api.bookings.listBookings) || [];
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     // const createCheckout = useAction(api.billing.createCheckoutSession);
 

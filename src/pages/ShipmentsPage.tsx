@@ -107,7 +107,7 @@ const ShipmentsPage = () => {
     ]
   };
 
-  const liveData = useQuery(api.shipments.listShipments, { onlyMine: true });
+  const liveData = useQuery(api.shipments.listShipments, {});
 
   // State for filtering - initialized with fallback, updated via effect
   const [filteredShipments, setFilteredShipments] = useState(HARDCODED_SHIPMENTS);

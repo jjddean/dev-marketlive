@@ -71,6 +71,12 @@ export const createDocument = mutation({
     };
     if (linkedUserId) toInsert.userId = linkedUserId; // only set when present (schema has userId optional)
 
+    // Add orgId from identity
+    const orgId = (identity as any).org_id;
+    if (orgId) {
+      toInsert.orgId = orgId;
+    }
+
     const docId = await ctx.db.insert("documents", toInsert);
 
     return docId;
