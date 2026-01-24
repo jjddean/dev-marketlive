@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
 import DataTable from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,21 +23,21 @@ const AdminShipmentsPage = () => {
     const flagShipment = useMutation(api.shipments.flagShipment);
     const clearFlag = useMutation(api.shipments.clearShipmentFlag);
 
-    const handleFlag = async (shipmentId: string) => {
+    const handleFlag = async (shipmentId: Id<"shipments">) => {
         try {
-            await flagShipment({ shipmentIdString: shipmentId, riskLevel: 'high', reason: 'Manual Admin Flag' });
-            toast({ title: "Shipment Flagged", description: "Marked as High Risk." });
+            await flagShipment({ shipmentId: shipmentId, shipmentIdString: shipmentId, riskLevel: 'high', reason: 'Manual Admin Flag' });
+            toast.success("Shipment Flagged: Marked as High Risk.");
         } catch (error) {
-            toast({ title: "Error", description: "Failed to flag shipment.", variant: "destructive" });
+            toast.error("Failed to flag shipment.");
         }
     };
 
-    const handleClear = async (shipmentId: string) => {
+    const handleClear = async (shipmentId: Id<"shipments">) => {
         try {
             await clearFlag({ shipmentIdString: shipmentId });
-            toast({ title: "Risk Cleared", description: "Shipment marked as safe." });
+            toast.success("Risk Cleared: Shipment marked as safe.");
         } catch (error) {
-            toast({ title: "Error", description: "Failed to clear flag.", variant: "destructive" });
+            toast.error("Failed to clear flag.");
         }
     };
 
@@ -51,7 +52,7 @@ const AdminShipmentsPage = () => {
             header: 'Risk',
             render: (val: string) => (
                 val === 'high' ? <Badge variant="destructive" className="flex w-fit items-center gap-1"><AlertTriangle className="h-3 w-3" /> High</Badge> :
-                    val === 'medium' ? <Badge variant="warning" className="bg-yellow-100 text-yellow-800">Medium</Badge> :
+                    val === 'medium' ? <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">Medium</Badge> :
                         <Badge variant="outline" className="text-gray-500 border-gray-200">Safe</Badge>
             )
         },

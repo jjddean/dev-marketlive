@@ -1,6 +1,6 @@
 import React from 'react';
-import { useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api";
+// import { useMutation } from "convex/react";
+// import { api } from "../../../convex/_generated/api";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,16 +11,8 @@ import AdminPageHeader from '@/components/layout/admin/AdminPageHeader';
 import { toast } from "sonner";
 
 const AdminSettingsPage = () => {
-    const seedData = useMutation(api.seed.seedAdminData);
-
     const handleSeedData = async () => {
-        try {
-            await seedData({});
-            toast.success("Test data seeded successfully!");
-        } catch (error) {
-            console.error(error);
-            toast.error("Failed to seed data.");
-        }
+        toast.info("Seed functionality is currently disabled");
     };
 
     return (

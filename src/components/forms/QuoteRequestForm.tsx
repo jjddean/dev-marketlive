@@ -403,20 +403,7 @@ const QuoteRequestForm: React.FC<QuoteRequestFormProps> = ({ onSubmit, onCancel,
           </div>
         );
 
-      case 3:
-        return (
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Select Shipping Service</h3>
-            <LiveRateComparison
-              rateRequest={rateRequest}
-              onRateSelect={handleRateSelect}
-              onBook={handleBookRate}
-              onRatesFetched={(rates) => {
-                setFormData(prev => ({ ...prev, rates }));
-              }}
-            />
-          </div>
-        );
+
 
       case 4:
         return (
