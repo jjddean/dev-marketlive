@@ -115,7 +115,7 @@ export function ShipmentMap({ className = '' }: ShipmentMapProps) {
                         longitude={shipment.lng}
                         latitude={shipment.lat}
                         anchor="bottom"
-                        onClick={(e) => {
+                        onClick={(e: any) => {
                             // If we let the click propagate, it might close the popup immediately on some implementations
                             e.originalEvent.stopPropagation();
                             setPopupInfo(shipment);
@@ -128,8 +128,8 @@ export function ShipmentMap({ className = '' }: ShipmentMapProps) {
                             )}
 
                             <div className={`p-2 rounded-full shadow-lg transition-transform transform group-hover:scale-110 ${shipment.status === 'Delivered' ? 'bg-green-500 text-white' :
-                                    shipment.status === 'In Transit' ? 'bg-blue-500 text-white' :
-                                        'bg-orange-500 text-white'
+                                shipment.status === 'In Transit' ? 'bg-blue-500 text-white' :
+                                    'bg-orange-500 text-white'
                                 }`}>
                                 <Ship size={16} />
                             </div>
@@ -151,8 +151,8 @@ export function ShipmentMap({ className = '' }: ShipmentMapProps) {
                             <div className="flex items-center justify-between mb-2">
                                 <span className="font-bold text-sm text-gray-900">{popupInfo.id}</span>
                                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${popupInfo.status === 'Delivered' ? 'bg-green-100 text-green-700' :
-                                        popupInfo.status === 'In Transit' ? 'bg-blue-100 text-blue-700' :
-                                            'bg-orange-100 text-orange-700'
+                                    popupInfo.status === 'In Transit' ? 'bg-blue-100 text-blue-700' :
+                                        'bg-orange-100 text-orange-700'
                                     }`}>
                                     {popupInfo.status}
                                 </span>

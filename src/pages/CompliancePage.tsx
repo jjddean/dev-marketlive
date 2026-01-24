@@ -7,6 +7,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Link } from 'react-router-dom';
 import { ComplianceKycModal } from "@/components/compliance/ComplianceKycModal";
+import { toast } from 'sonner';
 
 const CompliancePage = () => {
   // Live documents for compliance monitoring
@@ -32,10 +33,8 @@ const CompliancePage = () => {
     link.click();
     document.body.removeChild(link);
 
-    import('sonner').then(({ toast }) => {
-      toast.success("Download Started", {
-        description: `Downloading ${templateName}...`
-      });
+    toast.success("Download Started", {
+      description: `Downloading ${templateName}...`
     });
   };
 

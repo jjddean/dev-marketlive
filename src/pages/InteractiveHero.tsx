@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import Map, { Source, Layer, Marker } from "react-map-gl/mapbox";
+import "mapbox-gl/dist/mapbox-gl.css";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
