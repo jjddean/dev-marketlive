@@ -85,46 +85,52 @@ const HomePage = () => {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            {/* Option 1: Sea (Cheapest) */}
-            <div className="border rounded-xl p-6 hover:shadow-lg transition-all cursor-pointer border-l-4 border-l-emerald-500 bg-white group">
+            {/* Option 1: Sea (Value - Primary/Navy) */}
+            <div className="rounded-xl p-6 shadow-sm hover:shadow-lg transition-all cursor-pointer bg-white group">
               <div className="flex justify-between items-start mb-4">
-                <div className="p-3 bg-emerald-50 rounded-lg group-hover:bg-emerald-100 transition-colors">
+                <div className="p-3 bg-primary-50 rounded-lg group-hover:bg-primary-100 transition-colors">
                   <span className="text-2xl">🚢</span>
                 </div>
-                <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-2 py-1 rounded-full">Best Value</span>
+                <span className="bg-primary-100 text-primary-800 text-xs font-bold px-2 py-1 rounded-full">Best Value</span>
               </div>
               <h3 className="font-bold text-lg mb-1">Ocean Freight</h3>
               <p className="text-sm text-gray-500 mb-4">Maersk Line • 35 Days</p>
               <div className="text-2xl font-bold text-gray-900 mb-4">$1,240 <span className="text-sm font-normal text-gray-500">/ container</span></div>
-              <Button className="w-full" onClick={() => setIsQuoteModalOpen(true)}>Book Layout</Button>
+              <div className="flex justify-center">
+                <Button className="px-6 bg-primary hover:bg-primary-700 text-white shadow-sm" onClick={() => setIsQuoteModalOpen(true)}>Book Layout</Button>
+              </div>
             </div>
 
-            {/* Option 2: Air (Fastest) */}
-            <div className="border rounded-xl p-6 hover:shadow-lg transition-all cursor-pointer border-l-4 border-l-blue-500 bg-white group">
+            {/* Option 2: Air (Fastest - Secondary/Teal) */}
+            <div className="rounded-xl p-6 shadow-sm hover:shadow-lg transition-all cursor-pointer bg-white group">
               <div className="flex justify-between items-start mb-4">
-                <div className="p-3 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
+                <div className="p-3 bg-secondary-50 rounded-lg group-hover:bg-secondary-100 transition-colors">
                   <span className="text-2xl">✈️</span>
                 </div>
-                <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded-full">Fastest</span>
+                <span className="bg-secondary-100 text-secondary-800 text-xs font-bold px-2 py-1 rounded-full">Fastest</span>
               </div>
               <h3 className="font-bold text-lg mb-1">Air Freight</h3>
               <p className="text-sm text-gray-500 mb-4">DHL Aviation • 3 Days</p>
               <div className="text-2xl font-bold text-gray-900 mb-4">$4,850 <span className="text-sm font-normal text-gray-500">/ 500kg</span></div>
-              <Button className="w-full variant-outline border-blue-200 text-blue-700 hover:bg-blue-50" onClick={() => setIsQuoteModalOpen(true)}>Book Express</Button>
+              <div className="flex justify-center">
+                <Button className="px-6 variant-outline border-secondary text-secondary-700 hover:bg-secondary-50 shadow-sm" onClick={() => setIsQuoteModalOpen(true)}>Book Express</Button>
+              </div>
             </div>
 
-            {/* Option 3: Rail/Mixed (Balanced) */}
-            <div className="border rounded-xl p-6 hover:shadow-lg transition-all cursor-pointer border-l-4 border-l-purple-500 bg-white group">
+            {/* Option 3: Rail/Mixed (Eco - Primary-Light or Slate for neutrality) */}
+            <div className="rounded-xl p-6 shadow-sm hover:shadow-lg transition-all cursor-pointer bg-white group">
               <div className="flex justify-between items-start mb-4">
-                <div className="p-3 bg-purple-50 rounded-lg group-hover:bg-purple-100 transition-colors">
+                <div className="p-3 bg-primary-50 rounded-lg group-hover:bg-primary-100 transition-colors">
                   <span className="text-2xl">🚆</span>
                 </div>
-                <span className="bg-purple-100 text-purple-800 text-xs font-bold px-2 py-1 rounded-full">Eco Choice</span>
+                <span className="bg-primary-100 text-primary-700 text-xs font-bold px-2 py-1 rounded-full">Eco Choice</span>
               </div>
               <h3 className="font-bold text-lg mb-1">Rail Freight</h3>
               <p className="text-sm text-gray-500 mb-4">China Rec • 18 Days</p>
               <div className="text-2xl font-bold text-gray-900 mb-4">$2,100 <span className="text-sm font-normal text-gray-500">/ container</span></div>
-              <Button className="w-full variant-ghost hover:bg-purple-50 text-purple-700" onClick={() => setIsQuoteModalOpen(true)}>Book Green</Button>
+              <div className="flex justify-center">
+                <Button className="px-6 variant-ghost hover:bg-primary-50 text-primary-700 shadow-sm" onClick={() => setIsQuoteModalOpen(true)}>Book Green</Button>
+              </div>
             </div>
           </div>
         </div>

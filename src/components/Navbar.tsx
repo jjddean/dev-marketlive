@@ -54,7 +54,7 @@ const Navbar: React.FC = () => {
       <div className="navbar-container">
         <Link to="/" className="navbar-logo flex items-center gap-2">
           <img src="/clearship-logo.png" alt="Clearship" className="h-10 w-auto object-contain" />
-          <span className="text-2xl font-bold text-primary-900">Clearship®</span>
+          <span className="text-xl font-bold text-primary-900">Clearship®</span>
         </Link>
 
         <ul className="nav-menu">

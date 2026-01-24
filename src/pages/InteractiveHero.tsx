@@ -80,7 +80,7 @@ export const InteractiveHero = () => {
                                 id="route-line"
                                 type="line"
                                 layout={{ "line-join": "round", "line-cap": "round" }}
-                                paint={{ "line-color": "#3b82f6", "line-width": 4, "line-opacity": 0.8 }}
+                                paint={{ "line-color": "#003366", "line-width": 4, "line-opacity": 0.8 }}
                             />
                         </Source>
                     )}
@@ -119,7 +119,7 @@ export const InteractiveHero = () => {
                                     onChange={e => setDestination(e.target.value)}
                                 />
                             </div>
-                            <Button size="lg" className="w-full bg-blue-600 hover:bg-blue-700" onClick={handleSearch}>
+                            <Button size="lg" className="w-full bg-primary hover:bg-primary-700" onClick={handleSearch}>
                                 <Search className="w-4 h-4 mr-2" />
                                 Search Routes
                             </Button>
@@ -135,8 +135,8 @@ export const InteractiveHero = () => {
                         <div className="flex justify-between items-center mb-4">
                             <div className="flex items-center gap-2">
                                 <span className="flex h-2 w-2 relative">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
                                 </span>
                                 <h3 className="font-bold text-slate-800 text-sm">Live Rates Found</h3>
                             </div>
@@ -163,7 +163,7 @@ export const InteractiveHero = () => {
                         <div className="mt-4 pt-3 border-t border-slate-100/50 text-center">
                             <Button
                                 size="sm"
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200/50 transition-all hover:scale-[1.02]"
+                                className="w-full bg-primary hover:bg-primary-700 text-white shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]"
                                 onClick={() => document.getElementById('waitlist-form')?.scrollIntoView({ behavior: 'smooth' })}
                             >
                                 Unlock & Book these Rates
@@ -178,15 +178,15 @@ export const InteractiveHero = () => {
 };
 
 const MockQuoteCard = ({ carrier, type, days, price, badges, logo }: any) => (
-    <div className="flex items-center justify-between p-3.5 bg-white rounded-lg border border-slate-100 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer group">
+    <div className="flex items-center justify-between p-3.5 bg-white rounded-lg border border-slate-100 hover:border-primary-400 hover:shadow-md transition-all cursor-pointer group">
         <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${type === 'sea' ? 'bg-blue-50' : 'bg-orange-50'}`}>
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${type === 'sea' ? 'bg-primary-50' : 'bg-secondary-50'}`}>
                 {logo}
             </div>
             <div>
                 <p className="font-bold text-slate-900 text-sm flex items-center gap-1">
                     {carrier}
-                    {type === 'air' && <Zap className="w-3 h-3 text-amber-500 fill-amber-500" />}
+                    {type === 'air' && <Zap className="w-3 h-3 text-secondary-500 fill-secondary-500" />}
                 </p>
                 <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-xs font-medium text-slate-500">{days}</span>
@@ -201,7 +201,7 @@ const MockQuoteCard = ({ carrier, type, days, price, badges, logo }: any) => (
             </div>
         </div>
         <div className="text-right">
-            <p className="font-bold text-blue-600 text-base">{price}</p>
+            <p className="font-bold text-primary-600 text-base">{price}</p>
             <span className="text-[10px] text-slate-400 font-medium">USD</span>
         </div>
     </div>
