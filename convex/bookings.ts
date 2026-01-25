@@ -221,14 +221,14 @@ export const getBooking = query({
 });
 
 // Admin: list all bookings for the current org (for stats/dashboard)
+// Admin: list all bookings for the current org or personal (for stats/dashboard)
 export const listBookings = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { orgId: v.optional(v.union(v.string(), v.null())) },
+  handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
 
-    // Get current user's org from JWT
-    const orgId = (identity as any).org_id;
+    const orgId = args.orgId ?? null;
 
     if (orgId) {
       // Filter by organization
@@ -238,7 +238,7 @@ export const listBookings = query({
         .order("desc")
         .collect();
     } else {
-      // Personal account - filter by userId
+      // Personal account - filter by userId AND ensure orgId is undefined
       const user = await ctx.db
         .query("users")
         .withIndex("byExternalId", (q) => q.eq("externalId", identity.subject))
@@ -249,6 +249,7 @@ export const listBookings = query({
       return await ctx.db
         .query("bookings")
         .withIndex("byUserId", (q) => q.eq("userId", user._id))
+        .filter((q) => q.eq(q.field("orgId"), undefined))
         .order("desc")
         .collect();
     }

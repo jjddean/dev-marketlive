@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React, { useState, useMemo, useEffect } from 'react';
+import { Check } from 'lucide-react';
 import MediaCardHeader from '@/components/ui/media-card-header';
 import DataTable from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
@@ -28,7 +29,23 @@ const PaymentsPage = () => {
   // const createCheckout = useAction(api.billing.createCheckoutSession);
   const completeSubscription = useMutation(api.payments.completeSubscription);
   const confirmBookingPayment = useMutation(api.bookings.confirmBookingPayment);
+  const createSubscriptionSession = useMutation(api.subscriptions.createCheckoutSession);
 
+  const handleUpgrade = async (priceId: string, plan: string) => {
+    const toastId = toast.loading("Redirecting to checkout...");
+    try {
+      const { url } = await createSubscriptionSession({ priceId, plan });
+      if (url) {
+        window.location.href = url;
+        return; // Don't dismiss toast if redirecting
+      }
+      toast.dismiss(toastId);
+    } catch (e: any) {
+      toast.dismiss(toastId);
+      console.error("Subscription Error:", e);
+      toast.error(`Subscription failed: ${e.message || "Unknown error"}`);
+    }
+  };
   useEffect(() => {
     // Check for success query param
     const query = new URLSearchParams(window.location.search);
@@ -68,6 +85,11 @@ const PaymentsPage = () => {
     }
 
 
+
+    const tabParam = query.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
 
     if (query.get('canceled')) {
       toast.info("Payment canceled.");
@@ -278,7 +300,15 @@ const PaymentsPage = () => {
               >
                 My Subscription
               </button>
-
+              <button
+                onClick={() => setActiveTab('billing')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'billing'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+              >
+                Billing
+              </button>
             </nav>
           </div>
         </div>
@@ -310,10 +340,109 @@ const PaymentsPage = () => {
         )}
 
         {activeTab === 'subscription' && (
+          <div className="py-8">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {/* Free Plan */}
+              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 flex flex-col">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Free</h3>
+                  <p className="text-gray-500 text-sm">Essential features for small teams</p>
+                </div>
+                <div className="mb-6">
+                  <span className="text-3xl font-bold text-gray-900">£0</span>
+                  <span className="text-gray-500">/mo</span>
+                </div>
+                <ul className="mb-8 space-y-3 flex-1">
+                  <li className="flex items-center text-sm text-gray-600">
+                    <Check className="h-4 w-4 text-green-500 mr-2" />
+                    Up to 5 shipments/mo
+                  </li>
+                  <li className="flex items-center text-sm text-gray-600">
+                    <Check className="h-4 w-4 text-green-500 mr-2" />
+                    Basic support
+                  </li>
+                </ul>
+                <Button variant="outline" disabled className="w-full">Current Plan</Button>
+              </div>
+
+              {/* Pro Plan */}
+              <div className="bg-white border border-blue-200 ring-1 ring-blue-500 rounded-lg shadow-sm p-6 flex flex-col relative">
+                <div className="absolute top-0 right-0 -mr-1 -mt-1 w-24 overflow-hidden">
+                  <div className="bg-blue-500 text-white text-xs font-bold px-3 py-1 text-center transform rotate-0 rounded-bl-lg">POPULAR</div>
+                </div>
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Pro</h3>
+                  <p className="text-gray-500 text-sm">Advanced tools for growing businesses</p>
+                </div>
+                <div className="mb-6">
+                  <span className="text-3xl font-bold text-gray-900">£49</span>
+                  <span className="text-gray-500">/mo</span>
+                </div>
+                <ul className="mb-8 space-y-3 flex-1">
+                  <li className="flex items-center text-sm text-gray-600">
+                    <Check className="h-4 w-4 text-primary mr-2" />
+                    Unlimited shipments
+                  </li>
+                  <li className="flex items-center text-sm text-gray-600">
+                    <Check className="h-4 w-4 text-primary mr-2" />
+                    Priority support
+                  </li>
+                  <li className="flex items-center text-sm text-gray-600">
+                    <Check className="h-4 w-4 text-primary mr-2" />
+                    Advanced Analytics
+                  </li>
+                </ul>
+                <Button onClick={() => handleUpgrade("price_1Pro...", "pro")} className="w-full">Switch to Pro</Button>
+              </div>
+
+              {/* Enterprise Plan */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg shadow-sm p-6 flex flex-col">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Enterprise</h3>
+                  <p className="text-gray-500 text-sm">Custom solutions for large scale</p>
+                </div>
+                <div className="mb-6">
+                  <span className="text-3xl font-bold text-gray-900">£149</span>
+                  <span className="text-gray-500">/mo</span>
+                </div>
+                <ul className="mb-8 space-y-3 flex-1">
+                  <li className="flex items-center text-sm text-gray-600">
+                    <Check className="h-4 w-4 text-green-500 mr-2" />
+                    Dedicated Account Manager
+                  </li>
+                  <li className="flex items-center text-sm text-gray-600">
+                    <Check className="h-4 w-4 text-green-500 mr-2" />
+                    Custom Integrations
+                  </li>
+                  <li className="flex items-center text-sm text-gray-600">
+                    <Check className="h-4 w-4 text-green-500 mr-2" />
+                    SLA Guarantees
+                  </li>
+                </ul>
+                <Button onClick={() => handleUpgrade("price_1Enterprise...", "enterprise")} variant="outline" className="w-full">Switch to Enterprise</Button>
+              </div>
+
+            </div>
+
+            <div className="mt-8 bg-white border border-gray-200 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-lg font-medium text-gray-900">Payment Methods</h4>
+                  <p className="text-sm text-gray-500">Manage your saved cards and bank accounts.</p>
+                </div>
+                <Button variant="outline">Manage in Stripe</Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'billing' && (
           <div className="flex justify-center py-8">
             <UserProfile />
           </div>
         )}
+
+
 
 
       </div>

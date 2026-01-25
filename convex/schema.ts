@@ -30,6 +30,8 @@ export default defineSchema({
     createdBy: v.optional(v.string()), // Clerk user ID who created it
     membersCount: v.optional(v.number()),
     status: v.optional(v.string()), // "active", "suspended", "terminated"
+    subscriptionTier: v.optional(v.string()), // "free", "pro", "enterprise"
+    subscriptionStatus: v.optional(v.string()), // "active", "canceled", "past_due"
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("byClerkOrgId", ["clerkOrgId"])

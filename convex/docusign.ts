@@ -13,6 +13,7 @@ export const sendEnvelope = action({
         signerName: v.string(),
         signerEmail: v.string(),
         documentBase64: v.optional(v.string()), // If uploading a real file
+        returnUrl: v.optional(v.string()), // Allow client to specify return URL (localhost vs prod)
     },
     handler: async (ctx, args) => {
         // 1. Configuration - Robust Key Handling
@@ -127,7 +128,8 @@ export const sendEnvelope = action({
             // 5. Generate Recipient View (Embedded Signing URL)
             console.log("Generating Recipient View...");
             const viewRequest = new docusign.RecipientViewRequest();
-            viewRequest.returnUrl = "http://localhost:5173/documents?event=signing_complete";
+            // Use client-provided URL or fallback to localhost default
+            viewRequest.returnUrl = args.returnUrl || "http://localhost:5173/documents?event=signing_complete";
             viewRequest.authenticationMethod = "none";
             viewRequest.email = args.signerEmail;
             viewRequest.userName = args.signerName;

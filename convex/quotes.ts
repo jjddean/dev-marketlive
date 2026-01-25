@@ -3,9 +3,11 @@ import { internal, api } from "./_generated/api"
 import { v } from "convex/values"
 import { calculateShippingPrice, estimateTransitTime } from "./pricing";
 
+// ... (imports remain)
 export const createQuote = mutation({
   args: {
     request: v.object({
+      // ... (existing fields)
       origin: v.string(),
       destination: v.string(),
       serviceType: v.string(),
@@ -17,17 +19,16 @@ export const createQuote = mutation({
       urgency: v.string(),
       additionalServices: v.array(v.string()),
       contactInfo: v.object({ name: v.string(), email: v.string(), phone: v.string(), company: v.string() }),
-      quotes: v.optional(v.array(v.any())), // Accept captured rates
+      quotes: v.optional(v.array(v.any())),
     }),
-    // Response is optional now because it might be generated from request.quotes
     response: v.optional(v.object({
       quoteId: v.string(),
       status: v.string(),
       quotes: v.array(v.any()),
     })),
+    orgId: v.optional(v.string()), // New: receive org context
   },
-  handler: async (ctx, { request, response }) => {
-    // Link to current user when available (map Clerk subject -> users.externalId)
+  handler: async (ctx, { request, response, orgId: argsOrgId }) => {
     const identity = await ctx.auth.getUserIdentity();
     let linkedUserId: any = null;
     if (identity) {
@@ -38,10 +39,11 @@ export const createQuote = mutation({
       if (user) linkedUserId = user._id as any;
     }
 
-    // Construct quote document
+    // Determine orgId: Arg > Token > null
+    const orgId = argsOrgId || (identity as any)?.org_id || null;
+
     const quoteDoc: any = {
       ...request,
-      // Use provided response OR build from request.quotes OR generate default
       quotes: response?.quotes || request.quotes || [{
         id: `rate-${Date.now()}`,
         carrier: "MarketLive Express",
@@ -59,6 +61,7 @@ export const createQuote = mutation({
       quoteId: response?.quoteId || `QT-${Date.now()}`,
       status: response?.status || "success",
       createdAt: Date.now(),
+      orgId: orgId, // Save it!
     };
     if (linkedUserId) quoteDoc.userId = linkedUserId;
 
@@ -82,11 +85,11 @@ export const createInstantQuoteAndBooking = mutation({
       urgency: v.string(),
       additionalServices: v.array(v.string()),
       contactInfo: v.object({ name: v.string(), email: v.string(), phone: v.string(), company: v.string() }),
-      quotes: v.optional(v.array(v.any())), // Accept rates from frontend
+      quotes: v.optional(v.array(v.any())),
     }),
+    orgId: v.optional(v.string()), // New
   },
-  handler: async (ctx, { request }) => {
-    // Calculate real price based on route, weight, and service type
+  handler: async (ctx, { request, orgId: argsOrgId }) => {
     const pricing = calculateShippingPrice({
       origin: request.origin,
       destination: request.destination,
@@ -97,7 +100,6 @@ export const createInstantQuoteAndBooking = mutation({
 
     const transitTime = estimateTransitTime(request.origin, request.destination, request.serviceType);
 
-    // Use provided rates from frontend, or generate one if none
     let quotes: any[] = request.quotes || [];
 
     if (quotes.length === 0) {
@@ -108,11 +110,10 @@ export const createInstantQuoteAndBooking = mutation({
         amount: pricing,
         currency: "USD",
         transit_time: transitTime,
-        logo: "/logo.png" // Placeholder
+        logo: "/logo.png"
       }];
     }
 
-    // Link to current user when available
     const identity = await ctx.auth.getUserIdentity();
     let linkedUserId: any = null;
     if (identity) {
@@ -123,6 +124,8 @@ export const createInstantQuoteAndBooking = mutation({
       if (user) linkedUserId = user._id as any;
     }
 
+    const orgId = argsOrgId || (identity as any)?.org_id || null;
+
     const quoteId = `QT-${Date.now()}`;
     const docId = await ctx.db.insert("quotes", {
       ...request,
@@ -130,6 +133,7 @@ export const createInstantQuoteAndBooking = mutation({
       status: "success",
       quotes,
       userId: linkedUserId,
+      orgId: orgId, // Save it
       createdAt: Date.now(),
     } as any);
 
@@ -138,13 +142,12 @@ export const createInstantQuoteAndBooking = mutation({
 });
 
 export const listQuotes = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { orgId: v.optional(v.union(v.string(), v.null())) }, // Updated args
+  handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
 
-    // Get current user's org from JWT
-    const orgId = (identity as any).org_id;
+    const orgId = args.orgId ?? null;
 
     if (orgId) {
       // Filter by organization
@@ -154,7 +157,7 @@ export const listQuotes = query({
         .order("desc")
         .collect();
     } else {
-      // Personal account - filter by userId
+      // Personal account - filter by userId AND ensure orgId is undefined
       const user = await ctx.db
         .query("users")
         .withIndex("byExternalId", (q) => q.eq("externalId", identity.subject))
@@ -165,6 +168,7 @@ export const listQuotes = query({
       return await ctx.db
         .query("quotes")
         .withIndex("byUserId", (q) => q.eq("userId", user._id))
+        .filter((q) => q.eq(q.field("orgId"), undefined))
         .order("desc")
         .collect();
     }

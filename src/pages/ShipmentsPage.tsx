@@ -5,13 +5,15 @@ import { Button } from '@/components/ui/button';
 import AdvancedSearch from '@/components/ui/advanced-search';
 import { LiveVesselMap } from '@/components/ui/live-vessel-map';
 import { ShipmentMap } from '@/components/ui/ShipmentMap';
-import { useQuery, useAction } from "convex/react";
+import { useQuery, useAction, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Sparkles, Mail } from "lucide-react";
 import { toast } from 'sonner';
-import { useUser } from "@clerk/clerk-react";
+import { useUser, useAuth } from "@clerk/clerk-react";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useFeature } from '@/hooks/useFeature';
+import { Link } from 'react-router-dom'; // Ensure Link is imported for upgrade redo
 import {
   Sheet,
   SheetContent,
@@ -19,16 +21,68 @@ import {
   SheetTitle,
   SheetDescription
 } from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const ShipmentsPage = () => {
   const { user } = useUser();
+  const hasPredictiveInsights = useFeature("PREDICTIVE_INSIGHTS");
   const [activeTab, setActiveTab] = useState('active');
   const [selectedShipment, setSelectedShipment] = useState<any>(null);
   const [sheetMode, setSheetMode] = useState<'details' | 'tracking'>('details');
   const [emailing, setEmailing] = useState(false);
+  const [limitDialogOpen, setLimitDialogOpen] = useState(false);
+  const createShipment = useMutation(api.shipments.upsertShipment);
 
   // Recipient email state (defaults to user logged in email)
   const [recipientEmail, setRecipientEmail] = useState("");
+
+  const handleCreateTestShipment = async () => {
+    const toastId = toast.loading("Creating shipment...");
+    try {
+      await createShipment({
+        shipmentId: `SH-TEST-${Date.now().toString().slice(-4)}`,
+        tracking: {
+          status: 'Booking Confirmed',
+          currentLocation: {
+            city: 'London',
+            state: '',
+            country: 'United Kingdom',
+            coordinates: { lat: 51.5074, lng: -0.1278 }
+          },
+          estimatedDelivery: new Date(Date.now() + 86400000 * 14).toISOString(),
+          carrier: 'Maersk Line',
+          trackingNumber: `MRKU${Date.now()}`,
+          service: 'Standard Freight',
+          shipmentDetails: {
+            weight: '1200 kg',
+            dimensions: '20x8x8 ft',
+            origin: 'London, UK',
+            destination: 'New York, USA',
+            value: '$5,000'
+          },
+          events: []
+        }
+      });
+      toast.dismiss(toastId);
+      toast.success("Shipment created successfully!");
+    } catch (error: any) {
+      toast.dismiss(toastId);
+      if (error.message.includes("PLAN_LIMIT_REACHED")) {
+        setLimitDialogOpen(true);
+      } else {
+        toast.error("Failed to create shipment: " + error.message);
+      }
+    }
+  };
 
   useEffect(() => {
     if (user?.primaryEmailAddress?.emailAddress) {
@@ -107,7 +161,8 @@ const ShipmentsPage = () => {
     ]
   };
 
-  const liveData = useQuery(api.shipments.listShipments, {});
+  const { orgId } = useAuth();
+  const liveData = useQuery(api.shipments.listShipments, { orgId: orgId ?? null });
 
   // State for filtering - initialized with fallback, updated via effect
   const [filteredShipments, setFilteredShipments] = useState(HARDCODED_SHIPMENTS);
@@ -370,6 +425,8 @@ const ShipmentsPage = () => {
       />
 
       <div className="px-4 sm:px-6 lg:px-8 py-8">
+
+
         {/* Tab Navigation */}
         <div className="mb-6">
           <div className="border-b border-gray-200">
@@ -414,9 +471,10 @@ const ShipmentsPage = () => {
               ({filteredShipments[activeTab as keyof typeof filteredShipments].length} results)
             </span>
           </h2>
+
           <div className="flex space-x-3">
             <Button variant="outline">Export</Button>
-            <Button>New Shipment</Button>
+            <Button onClick={handleCreateTestShipment}>New Shipment</Button>
           </div>
         </div>
 
@@ -472,6 +530,40 @@ const ShipmentsPage = () => {
             </div>
           </div>
         )}
+
+        {/* Pre-Pickup Protocol (New) */}
+        <Card className="mt-8 bg-green-50 border-green-200">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-green-800 text-lg flex items-center gap-2">
+              <span>🚚</span> Pre-Pickup Protocol
+            </CardTitle>
+            <CardDescription className="text-green-600">Driver arrival checklist - ensure smooth handover.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm text-green-900">
+              <li className="flex items-center gap-2">
+                <Checkbox id="labels" className="data-[state=checked]:bg-green-600 border-green-400" />
+                <label htmlFor="labels" className="cursor-pointer">Labels printed & attached?</label>
+              </li>
+              <li className="flex items-center gap-2">
+                <Checkbox id="invoice-copies" className="data-[state=checked]:bg-green-600 border-green-400" />
+                <label htmlFor="invoice-copies" className="cursor-pointer">Commercial Invoice (3 copies)?</label>
+              </li>
+              <li className="flex items-center gap-2">
+                <Checkbox id="warehouse-contact" className="data-[state=checked]:bg-green-600 border-green-400" />
+                <label htmlFor="warehouse-contact" className="cursor-pointer">Warehouse contact notified?</label>
+              </li>
+              <li className="flex items-center gap-2">
+                <Checkbox id="cargo-access" className="data-[state=checked]:bg-green-600 border-green-400" />
+                <label htmlFor="cargo-access" className="cursor-pointer">Cargo accessible (not blocked)?</label>
+              </li>
+              <li className="flex items-center gap-2">
+                <Checkbox id="photos" className="data-[state=checked]:bg-green-600 border-green-400" />
+                <label htmlFor="photos" className="cursor-pointer">Photos taken (for insurance)?</label>
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Shipment Details & Risk Analysis Sheet */}
@@ -569,36 +661,62 @@ const ShipmentsPage = () => {
                     />
                   </div>
 
-                  {/* AI Risk Analysis Widget */}
-                  <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-sm font-semibold text-slate-900 flex items-center">
-                        <Sparkles className="w-4 h-4 text-purple-600 mr-2" />
-                        Predictive Risk Analysis
-                      </h3>
-                      <span className="text-xs text-slate-500">Confidence: 94%</span>
-                    </div>
+                  {/* AI Risk Analysis Widget - GATED */}
+                  {hasPredictiveInsights ? (
+                    <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-sm font-semibold text-slate-900 flex items-center">
+                          <Sparkles className="w-4 h-4 text-purple-600 mr-2" />
+                          Predictive Risk Analysis
+                        </h3>
+                        <span className="text-xs text-slate-500">Confidence: 94%</span>
+                      </div>
 
-                    <RiskMeter shipmentId={selectedShipment.id} />
+                      <RiskMeter shipmentId={selectedShipment.id} />
 
-                    <div className="mt-4 space-y-3">
-                      <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Risk Factors Detected</h4>
-                      <div className="flex items-start space-x-3 text-sm bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
-                        <div className="mt-0.5">⚠️</div>
-                        <div>
-                          <p className="font-medium text-slate-800">Port Congestion at {selectedShipment.destination.split(',')[0]}</p>
-                          <p className="text-slate-500 text-xs mt-0.5">Average dwell time increased by 48h in last 2 days.</p>
+                      <div className="mt-4 space-y-3">
+                        <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Risk Factors Detected</h4>
+                        <div className="flex items-start space-x-3 text-sm bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
+                          <div className="mt-0.5">⚠️</div>
+                          <div>
+                            <p className="font-medium text-slate-800">Port Congestion at {selectedShipment.destination.split(',')[0]}</p>
+                            <p className="text-slate-500 text-xs mt-0.5">Average dwell time increased by 48h in last 2 days.</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start space-x-3 text-sm bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
+                          <div className="mt-0.5">🌦️</div>
+                          <div>
+                            <p className="font-medium text-slate-800">Weather Alert: Atlantic Route</p>
+                            <p className="text-slate-500 text-xs mt-0.5">Minor deviation expected due to storm front.</p>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-start space-x-3 text-sm bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
-                        <div className="mt-0.5">🌦️</div>
-                        <div>
-                          <p className="font-medium text-slate-800">Weather Alert: Atlantic Route</p>
-                          <p className="text-slate-500 text-xs mt-0.5">Minor deviation expected due to storm front.</p>
+                    </div>
+                  ) : (
+                    <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 opacity-90 relative overflow-hidden">
+                      <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex flex-col items-center justify-center text-center p-4">
+                        <span className="text-4xl mb-2">🔮</span>
+                        <h4 className="text-lg font-bold text-slate-900 mb-1">Predictive Insights Locked</h4>
+                        <p className="text-sm text-slate-600 mb-4 max-w-[200px]">Upgrade to Pro to foresee delays and mitigate risks with AI.</p>
+                        <Button asChild size="sm" className="bg-gradient-to-r from-purple-600 to-blue-600 border-0">
+                          <Link to="/payments?tab=subscription">Upgrade to Pro</Link>
+                        </Button>
+                      </div>
+                      <div className="blur-sm select-none pointer-events-none" aria-hidden="true">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-sm font-semibold text-slate-900 flex items-center">
+                            <Sparkles className="w-4 h-4 text-purple-600 mr-2" />
+                            Predictive Risk Analysis
+                          </h3>
+                        </div>
+                        <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden" />
+                        <div className="mt-4 space-y-3">
+                          <div className="h-16 bg-white rounded-lg border border-slate-100" />
+                          <div className="h-16 bg-white rounded-lg border border-slate-100" />
                         </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Share Analysis Section */}
                   <div className="space-y-3 pt-4 border-t border-gray-100">
@@ -637,6 +755,26 @@ const ShipmentsPage = () => {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Plan Limit Reached Dialog */}
+      <Dialog open={limitDialogOpen} onOpenChange={setLimitDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Monthly Shipment Limit Reached</DialogTitle>
+            <DialogDescription>
+              You have reached your limit of 5 shipments per month on the Free plan.
+              <br /><br />
+              Upgrade to <strong>Pro</strong> for unlimited shipments, advanced analytics, and priority support.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLimitDialogOpen(false)}>Cancel</Button>
+            <Button asChild className="bg-gradient-to-r from-purple-600 to-blue-600 border-0">
+              <Link to="/payments?tab=subscription">Upgrade to Pro</Link>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );
@@ -682,4 +820,8 @@ function RiskMeter({ shipmentId }: { shipmentId: string }) {
   )
 }
 
+
+
+
 export default ShipmentsPage;
+

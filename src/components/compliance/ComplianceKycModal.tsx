@@ -18,6 +18,7 @@ export const ComplianceKycModal = ({ open, onOpenChange }: KycModalProps) => {
     const [step, setStep] = useState(1);
     const [kycId, setKycId] = useState<Id<"kycVerifications"> | null>(null);
     const [loading, setLoading] = useState(false);
+    const [uploadedCount, setUploadedCount] = useState(0);
 
     // Mutations
     const startKyc = useMutation(api.compliance.startKyc);
@@ -40,7 +41,7 @@ export const ComplianceKycModal = ({ open, onOpenChange }: KycModalProps) => {
             }
         } else if (open && !status && !kycId) {
             // New draft
-            startKyc().then(setKycId);
+            startKyc({}).then((id) => setKycId(id));
         }
     }, [open, status]);
 
@@ -101,6 +102,8 @@ export const ComplianceKycModal = ({ open, onOpenChange }: KycModalProps) => {
                 fileUrl: storageId, // Using storageId as URL for now, will resolve on read
                 fileId: storageId
             });
+
+            setUploadedCount(prev => prev + 1);
             toast.success("Document uploaded");
         } catch (error) {
             console.error(error);
@@ -240,7 +243,7 @@ export const ComplianceKycModal = ({ open, onOpenChange }: KycModalProps) => {
 
                         <div className="flex justify-between pt-4">
                             <Button variant="ghost" onClick={() => setStep(1)}>Back</Button>
-                            <Button onClick={handleFinalSubmit} disabled={loading || !status?.documents?.length}>
+                            <Button onClick={handleFinalSubmit} disabled={loading || (uploadedCount === 0 && (!status?.documents?.length))}>
                                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Submit for Review
                             </Button>
@@ -267,8 +270,26 @@ export const ComplianceKycModal = ({ open, onOpenChange }: KycModalProps) => {
                                 : "Your documents are currently under review by our compliance team. You will be notified once approved (typically 24-48h)."
                             }
                         </p>
-                        <Button onClick={() => onOpenChange(false)}>
+                        <Button onClick={() => {
+                            onOpenChange(false);
+                            window.location.reload(); // Force reload to update dashboard state
+                        }}>
                             Close
+                        </Button>
+                        <Button variant="ghost" className="ml-2" onClick={() => {
+                            setStep(1);
+                            setKycId(null);
+                            setFormData({
+                                companyName: "",
+                                registrationNumber: "",
+                                vatNumber: "",
+                                country: "United Kingdom"
+                            });
+                            // Ideally we would also clear backend state if this is for testing, 
+                            // but for UI flow reset this is sufficient to show the form again.
+                            // In a real app we might not want this, but user requested it.
+                        }}>
+                            Submit Another (Test)
                         </Button>
                     </div>
                 )}

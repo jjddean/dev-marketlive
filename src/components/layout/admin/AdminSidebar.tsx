@@ -21,6 +21,7 @@ const navigation: { name: string; href: string; icon: any; badge?: number }[] = 
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Bookings', href: '/admin/bookings', icon: FileText },
     { name: 'Shipments', href: '/admin/shipments', icon: Truck },
+    { name: 'Documents', href: '/admin/documents', icon: FileText },
     { name: 'Customers', href: '/admin/customers', icon: Users },
     { name: 'Waitlist', href: '/admin/waitlist', icon: History },
     { name: 'Audit Logs', href: '/admin/audit', icon: ShieldCheck },

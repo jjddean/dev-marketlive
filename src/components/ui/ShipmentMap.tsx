@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
+// @ts-ignore
 import Map, { Marker, Popup, NavigationControl, FullscreenControl } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useQuery } from 'convex/react';

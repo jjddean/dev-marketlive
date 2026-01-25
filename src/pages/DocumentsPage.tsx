@@ -8,6 +8,7 @@ import { simulateDocuSignUpdate } from '@/lib/docusign';
 import Footer from '@/components/layout/Footer';
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { useUser, useAuth } from "@clerk/clerk-react";
 import { Sparkles } from "lucide-react";
 import {
     Drawer,
@@ -66,8 +67,10 @@ const DocumentsPage = () => {
     }, [searchParams, setSearchParams, createNotification]);
 
     // Live documents from Convex
+    const { orgId } = useAuth();
     const liveDocuments = useQuery(api.documents.listDocuments, {
-        type: docTypeFilter === 'all' ? undefined : docTypeFilter
+        type: docTypeFilter === 'all' ? undefined : docTypeFilter,
+        orgId: orgId ?? null
     });
 
     const tableData = useMemo(() => {
@@ -92,7 +95,8 @@ const DocumentsPage = () => {
     const [recipientName, setRecipientName] = useState('');
     const [recipientEmail, setRecipientEmail] = useState('');
     const [sending, setSending] = useState(false);
-    const [refreshing, setRefreshing] = useState(false);
+
+    const [refreshingId, setRefreshingId] = useState<string | null>(null);
     const [lastError, setLastError] = useState<string | null>(null);
 
     // Mutations
@@ -132,6 +136,7 @@ const DocumentsPage = () => {
                 documentId: sendDoc._id,
                 signerName: recipientName,
                 signerEmail: recipientEmail,
+                returnUrl: `${window.location.origin}/documents?event=signing_complete`
             });
 
             console.log("Msg Sent Result:", result);
@@ -184,7 +189,7 @@ const DocumentsPage = () => {
 
     const handleRefreshStatus = async (doc: any) => {
         if (!doc.docusign?.envelopeId) return;
-        setRefreshing(true);
+        setRefreshingId(doc._id);
         try {
             const newStatus = await simulateDocuSignUpdate(doc._id, doc.docusign.status);
 
@@ -200,7 +205,7 @@ const DocumentsPage = () => {
         } catch (e: any) {
             toast.error("Failed to refresh status");
         } finally {
-            setRefreshing(false);
+            setRefreshingId(null);
         }
     };
 
@@ -265,8 +270,8 @@ const DocumentsPage = () => {
                             <Printer className="h-4 w-4" />
                         </Button>
                         {row.docusign?.envelopeId ? (
-                            <Button variant="ghost" size="icon" onClick={() => handleRefreshStatus(row)} disabled={refreshing} title="Refresh Status">
-                                <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                            <Button variant="ghost" size="icon" onClick={() => handleRefreshStatus(row)} disabled={refreshingId === row._id} title="Refresh Status">
+                                <RefreshCw className={`h-4 w-4 ${refreshingId === row._id ? 'animate-spin' : ''}`} />
                             </Button>
                         ) : canSendForSignature ? (
                             <Button variant="ghost" size="icon" onClick={() => handleOpenSend(row)} title="Send for Signature">
@@ -406,6 +411,7 @@ const DocumentsPage = () => {
                 }}
                 createDocument={createDocument}
                 initialData={autofillData} // Pass the data
+                orgId={orgId} // Pass implicit Org ID
             />
 
             <Sheet open={detailOpen} onOpenChange={setDetailOpen}>
@@ -426,8 +432,8 @@ const DocumentsPage = () => {
                                 </div>
                                 <div className="pt-2">
                                     {selectedDoc.docusign?.envelopeId ? (
-                                        <Button size="sm" variant="outline" className="w-full" onClick={() => handleRefreshStatus(selectedDoc)} disabled={refreshing}>
-                                            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} /> Refresh Status
+                                        <Button size="sm" variant="outline" className="w-full" onClick={() => handleRefreshStatus(selectedDoc)} disabled={refreshingId === selectedDoc._id}>
+                                            <RefreshCw className={`h-4 w-4 mr-2 ${refreshingId === selectedDoc._id ? 'animate-spin' : ''}`} /> Refresh Status
                                         </Button>
                                     ) : (
                                         <Button size="sm" className="w-full" onClick={() => handleOpenSend(selectedDoc)}>
@@ -477,7 +483,7 @@ const DocumentsPage = () => {
 };
 
 // Reuse CreateDocumentDrawer (copy paste full implementation or import if extracted, I'll allow copy here for safety)
-function CreateDocumentDrawer({ open, onOpenChange, createDocument, initialData }: any) {
+function CreateDocumentDrawer({ open, onOpenChange, createDocument, initialData, orgId }: any) {
     const defaultState = {
         type: 'commercial_invoice',
         documentNumber: `CI-${Date.now().toString().slice(-6)}`,
@@ -545,7 +551,8 @@ function CreateDocumentDrawer({ open, onOpenChange, createDocument, initialData 
                     },
                     terms: 'Standard Terms'
                 },
-                status: 'draft'
+                status: 'draft',
+                orgId: orgId ?? undefined // Pass orgId explicitly
             });
             toast.success("Document Uploaded for Review");
             onOpenChange(false);

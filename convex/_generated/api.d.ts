@@ -16,7 +16,6 @@ import type * as backfill from "../backfill.js";
 import type * as billing from "../billing.js";
 import type * as bookings from "../bookings.js";
 import type * as compliance from "../compliance.js";
-import type * as debug from "../debug.js";
 import type * as debug_email from "../debug_email.js";
 import type * as developer from "../developer.js";
 import type * as documents from "../documents.js";
@@ -59,7 +58,6 @@ declare const fullApi: ApiFromModules<{
   billing: typeof billing;
   bookings: typeof bookings;
   compliance: typeof compliance;
-  debug: typeof debug;
   debug_email: typeof debug_email;
   developer: typeof developer;
   documents: typeof documents;

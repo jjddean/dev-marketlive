@@ -5,6 +5,8 @@ import { api } from "../../convex/_generated/api";
 import { useUser, SignInButton } from "@clerk/clerk-react";
 import { Copy, Trash2, Key, Check, Plus, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { useFeature } from '@/hooks/useFeature';
+import { Link } from 'react-router-dom';
 
 const ApiDocsPage: React.FC = () => {
   const { user, isLoaded, isSignedIn } = useUser();
@@ -18,7 +20,10 @@ const ApiDocsPage: React.FC = () => {
   const [newlyGeneratedKey, setNewlyGeneratedKey] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
+  const hasApiAccess = useFeature("API_ACCESS");
+
   const handleGenerateKey = async () => {
+    if (!hasApiAccess) return;
     try {
       setIsGenerating(true);
       const result = await generateKey({ name: `Key ${newlyGeneratedKey ? '(New)' : ''}` });
@@ -48,7 +53,6 @@ const ApiDocsPage: React.FC = () => {
   };
 
   const endpoints = {
-    // ... (Existing endpoints structure kept same, just collapsed for brevity in this edit if needed, but we'll include them to be safe)
     shipments: {
       title: 'Shipments API',
       description: 'Manage and track your freight shipments',
@@ -171,9 +175,17 @@ const ApiDocsPage: React.FC = () => {
                     <h2 className="text-lg font-semibold text-gray-900">Your API Keys</h2>
                     <p className="text-sm text-gray-500">Manage access keys for your applications</p>
                   </div>
-                  <Button onClick={handleGenerateKey} disabled={isGenerating} size="sm" className="gap-2">
-                    {isGenerating ? "Generating..." : <><Plus className="w-4 h-4" /> Generate New Key</>}
-                  </Button>
+                  {hasApiAccess ? (
+                    <Button onClick={handleGenerateKey} disabled={isGenerating} size="sm" className="gap-2">
+                      {isGenerating ? "Generating..." : <><Plus className="w-4 h-4" /> Generate New Key</>}
+                    </Button>
+                  ) : (
+                    <Button variant="secondary" asChild size="sm">
+                      <Link to="/payments?tab=subscription">
+                        <span className="mr-2">🔒</span> Upgrade to Pro
+                      </Link>
+                    </Button>
+                  )}
                 </div>
 
                 {/* New Key Display */}

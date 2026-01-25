@@ -25,9 +25,16 @@ import {
 import QuoteRequestForm from '@/components/forms/QuoteRequestForm';
 import { toast } from 'sonner';
 import { useStripeCheckout } from '@/hooks/useStripeCheckout';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+
+import { useAuth } from "@clerk/clerk-react";
+
+// ...
 
 const ClientBookingsPage = () => {
-    const bookings = useQuery(api.bookings.listBookings) || [];
+    const { orgId } = useAuth();
+    const bookings = useQuery(api.bookings.listBookings, { orgId: orgId ?? null }) || [];
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     // const createCheckout = useAction(api.billing.createCheckoutSession);
 

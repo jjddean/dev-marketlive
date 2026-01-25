@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+// @ts-ignore
 import Map, { Marker, Source, Layer } from 'react-map-gl/mapbox';
+// @ts-ignore
 import type { MapRef } from 'react-map-gl/mapbox';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';

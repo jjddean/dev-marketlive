@@ -1,11 +1,11 @@
 import { useState, useMemo, useEffect } from "react";
+// @ts-ignore
 import Map, { Source, Layer, Marker } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Zap, Ship, Plane, Search, ArrowRight, TrendingUp } from "lucide-react";
-import "mapbox-gl/dist/mapbox-gl.css";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 

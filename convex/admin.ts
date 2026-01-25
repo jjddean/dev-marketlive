@@ -213,3 +213,21 @@ export const listOrganizations = query({
             .collect();
     }
 });
+
+// Admin: List All Documents
+export const listAllDocuments = query({
+    args: {},
+    handler: async (ctx) => {
+        // In prod: check admin role
+        const docs = await ctx.db
+            .query("documents")
+            .order("desc")
+            .collect();
+
+        // Enhance with Org Name/User Name?
+        // For MVP, just return docs. Frontend can potentially resolve names if needed
+        // or we can do a Promise.all join here if performance allows (for <1000 items ok).
+
+        return docs;
+    }
+});

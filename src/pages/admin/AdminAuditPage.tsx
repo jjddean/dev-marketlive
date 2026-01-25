@@ -17,7 +17,7 @@ import DataTable from '@/components/ui/data-table';
 import AdminPageHeader from '@/components/layout/admin/AdminPageHeader';
 
 const AdminAuditPage = () => {
-    const logs = useQuery(api.admin.getAuditLogs) || [];
+    const logs = useQuery(api.auditLogs.listLogs, {}) || [];
     const [search, setSearch] = useState("");
 
     const getIcon = (action: string) => {

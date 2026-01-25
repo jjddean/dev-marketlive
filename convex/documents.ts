@@ -42,19 +42,24 @@ export const createDocument = mutation({
       terms: v.optional(v.string()),
     }),
     status: v.optional(v.string()),
+    orgId: v.optional(v.string()), // New: Implicitly passed by frontend context
   },
   handler: async (ctx, args) => {
     // Link to current user. Ensure a user record exists; if not, create it.
     const identity = await ctx.auth.getUserIdentity();
+    // ... (user linking logic remains same)
     let linkedUserId: any = undefined;
     if (identity) {
+      // ... (existing code)
       let user = await ctx.db
         .query("users")
         .withIndex("byExternalId", (q) => q.eq("externalId", identity.subject))
         .unique();
+      // ... (existing backfill logic)
       if (!user) {
         const name = (identity as any).name || (identity as any).email || identity.subject;
-        linkedUserId = await ctx.db.insert("users", { name, externalId: identity.subject } as any);
+        const email = (identity as any).email;
+        linkedUserId = await ctx.db.insert("users", { name, email, externalId: identity.subject } as any);
       } else {
         linkedUserId = user._id;
       }
@@ -69,10 +74,10 @@ export const createDocument = mutation({
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
-    if (linkedUserId) toInsert.userId = linkedUserId; // only set when present (schema has userId optional)
+    if (linkedUserId) toInsert.userId = linkedUserId;
 
-    // Add orgId from identity
-    const orgId = (identity as any).org_id;
+    // Add orgId: prioritize ARG, fall back to Token, then null
+    const orgId = args.orgId || (identity as any).org_id;
     if (orgId) {
       toInsert.orgId = orgId;
     }
@@ -101,10 +106,12 @@ export const listMyDocuments = query({
     if (!user) return [];
 
     const userId = user._id;
+    const orgId = (identity as any).org_id;
 
     let docs = await ctx.db
       .query("documents")
       .withIndex("byUserId", (q) => q.eq("userId", userId))
+      .filter(q => q.eq(q.field("orgId"), orgId))
       .collect();
 
     // Filter by type if provided
@@ -223,7 +230,11 @@ export const generateShareLink = mutation({
   handler: async (ctx, { documentId }) => {
     // Check auth
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Unauthorized");
+    console.log("DEBUG: Clerk Identity:", identity);
+
+    if (!identity) {
+      throw new Error("Unauthenticated call to createDocument");
+    }
 
     const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
@@ -247,8 +258,10 @@ export const getSharedDocument = query({
   },
 });
 
+// Re-defined listDocuments with strict Org filtering
 export const listDocuments = query({
   args: {
+    orgId: v.optional(v.union(v.string(), v.null())),
     status: v.optional(v.string()),
     type: v.optional(v.string()),
   },
@@ -256,8 +269,7 @@ export const listDocuments = query({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
 
-    // Get current user's org from JWT
-    const orgId = (identity as any).org_id;
+    const orgId = args.orgId ?? null;
 
     let docs;
     if (orgId) {
@@ -268,7 +280,7 @@ export const listDocuments = query({
         .order("desc")
         .collect();
     } else {
-      // Personal account - filter by userId
+      // Personal account - filter by userId AND ensure orgId is null/undefined
       const user = await ctx.db
         .query("users")
         .withIndex("byExternalId", (q) => q.eq("externalId", identity.subject))
@@ -279,6 +291,7 @@ export const listDocuments = query({
       docs = await ctx.db
         .query("documents")
         .withIndex("byUserId", (q) => q.eq("userId", user._id))
+        .filter((q) => q.eq(q.field("orgId"), undefined)) // Explicitly ensure no Org linked
         .order("desc")
         .collect();
     }

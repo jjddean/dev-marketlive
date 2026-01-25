@@ -17,10 +17,11 @@ const DashboardPage = () => {
   const { organization } = useOrganization();
   const { user } = useUser();
   const orgId = organization?.id;
+  console.log("orgId from useOrganization:", orgId); // Debugging Log
 
-  const liveShipments = useQuery(api.shipments.listShipments, {});
-  const liveDocuments = useQuery(api.documents.listDocuments, {});
-  const liveBookings = useQuery(api.bookings.listBookings, {});
+  const liveShipments = useQuery(api.shipments.listShipments, { orgId: orgId ?? null });
+  const liveDocuments = useQuery(api.documents.listDocuments, { orgId: orgId ?? null });
+  const liveBookings = useQuery(api.bookings.listBookings, { orgId: orgId ?? null });
 
   // Dynamic metrics calculation
   const liveMetrics = {

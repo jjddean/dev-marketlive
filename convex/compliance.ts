@@ -17,10 +17,17 @@ export const getKycStatus = query({
 
 // Start or resume KYC process
 export const startKyc = mutation({
-    args: {},
-    handler: async (ctx) => {
+    args: {
+        orgId: v.optional(v.string()) // Implicitly passed from frontend
+    },
+    handler: async (ctx, args) => {
         const identity = await ctx.auth.getUserIdentity();
         if (!identity) throw new Error("Unauthorized");
+
+        // Note: We might want one KYC per Org or per User.
+        // If Org is selected, we should prioritize querying by orgId if we had an index,
+        // but currently it checks `byUserId`. 
+        // For now, let's keep the existing check but ensure we save the correct orgId.
 
         const existing = await ctx.db
             .query("kycVerifications")
@@ -29,14 +36,20 @@ export const startKyc = mutation({
 
         if (existing) return existing._id;
 
-        const user = await ctx.db
-            .query("users")
-            .withIndex("byExternalId", (q) => q.eq("externalId", identity.subject))
-            .unique();
+        // Use arg first, then fallback to user record (though user record might be stale)
+        let orgId = args.orgId;
+
+        if (!orgId) {
+            const user = await ctx.db
+                .query("users")
+                .withIndex("byExternalId", (q) => q.eq("externalId", identity.subject))
+                .unique();
+            orgId = user?.orgId;
+        }
 
         return await ctx.db.insert("kycVerifications", {
             userId: identity.subject,
-            orgId: user?.orgId,
+            orgId: orgId,
             status: "draft",
             step: 1,
             documents: [],

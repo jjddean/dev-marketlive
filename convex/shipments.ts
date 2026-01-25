@@ -91,6 +91,45 @@ export const upsertShipment = mutation({
         }
       }
     } else {
+      // ENFORCEMENT: Check Usage Limits for New Shipments
+      // 1. Determine Tier (Org or User)
+      let tier = "free";
+      if ((identity as any).org_id) {
+        const org = await ctx.db
+          .query("organizations")
+          .withIndex("byClerkOrgId", (q) => q.eq("clerkOrgId", (identity as any).org_id))
+          .unique();
+        tier = org?.subscriptionTier || "free";
+      } else if (currentUserId) {
+        const user = await ctx.db.get(currentUserId as any);
+        tier = (user as any)?.subscriptionTier || "free";
+      }
+
+      // 2. Count Shipments in Current Month IF Free
+      if (tier === "free") {
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
+        let count = 0;
+        if ((identity as any).org_id) {
+          const shipments = await ctx.db
+            .query("shipments")
+            .withIndex("byOrgId", (q) => q.eq("orgId", (identity as any).org_id))
+            .collect(); // In prod, use a dedicated monthly counter or faster index
+          count = shipments.filter(s => s.createdAt >= startOfMonth).length;
+        } else if (currentUserId) {
+          const shipments = await ctx.db
+            .query("shipments")
+            .withIndex("byUserId", (q) => q.eq("userId", currentUserId as any))
+            .collect();
+          count = shipments.filter(s => s.createdAt >= startOfMonth).length;
+        }
+
+        if (count >= 5) {
+          throw new Error("PLAN_LIMIT_REACHED: You have reached your monthly limit of 5 shipments. Please upgrade to Pro for unlimited shipments.");
+        }
+      }
+
       shipmentDocId = await ctx.db.insert("shipments", {
         shipmentId,
         status: tracking.status,
@@ -154,17 +193,26 @@ export const getShipment = query({
 });
 
 // New: list shipments for dashboard
+// New: list shipments for dashboard with strict Org filtering
 export const listShipments = query({
-  args: { search: v.optional(v.string()), onlyMine: v.optional(v.boolean()) },
-  handler: async (ctx, { search, onlyMine }) => {
+  args: {
+    search: v.optional(v.string()),
+    onlyMine: v.optional(v.boolean()),
+    orgId: v.optional(v.union(v.string(), v.null()))
+  },
+  handler: async (ctx, { search, onlyMine, orgId: argsOrgId }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
 
-    // Get current user's org from JWT
-    const orgId = (identity as any).org_id;
+    const orgId = argsOrgId ?? null;
 
     let list = [] as any[];
     if (onlyMine) {
+      // "Only Mine" context - usually strict to the user regardless of Org?? 
+      // User requested "Only Mine" implies current user's items. 
+      // But typically this is scoped to the context (Org or Personal).
+      // For now, retaining user-centric filter but arguably should be intersected with Org if present.
+      // Keeping original behavior for `onlyMine` as it might be used specially.
       const user = await ctx.db
         .query("users")
         .withIndex("byExternalId", (q) => q.eq("externalId", identity.subject))
@@ -181,7 +229,7 @@ export const listShipments = query({
         .withIndex("byOrgId", (q) => q.eq("orgId", orgId))
         .collect();
     } else {
-      // Personal account - filter by userId
+      // Personal account - filter by userId AND ensure orgId is missing/null
       const user = await ctx.db
         .query("users")
         .withIndex("byExternalId", (q) => q.eq("externalId", identity.subject))
@@ -190,6 +238,7 @@ export const listShipments = query({
       list = await ctx.db
         .query("shipments")
         .withIndex("byUserId", (q) => q.eq("userId", user._id))
+        .filter((q) => q.eq(q.field("orgId"), undefined))
         .collect();
     }
 

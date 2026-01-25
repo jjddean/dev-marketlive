@@ -1,6 +1,8 @@
 import React from 'react';
 import MediaCardHeader from '@/components/ui/media-card-header';
 import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import Footer from '@/components/layout/Footer';
 import { FileText, FileBadge, FileWarning, CheckCircle, Clock } from 'lucide-react';
 import { useQuery } from "convex/react";
@@ -8,6 +10,9 @@ import { api } from "../../convex/_generated/api";
 import { Link } from 'react-router-dom';
 import { ComplianceKycModal } from "@/components/compliance/ComplianceKycModal";
 import { toast } from 'sonner';
+import { useFeature } from '@/hooks/useFeature';
+
+import { Lock } from "lucide-react";
 
 const CompliancePage = () => {
   // Live documents for compliance monitoring
@@ -214,9 +219,107 @@ const CompliancePage = () => {
             ))}
           </div>
         </div>
+
+        {/* 4. Customs Clearance Checklist (New) */}
+        <Card className="bg-amber-50 border-amber-200">
+          <CardHeader>
+            <CardTitle className="text-amber-800 flex items-center gap-2">
+              <span>📋</span> Customs Clearance Checklist
+            </CardTitle>
+            <CardDescription className="text-amber-700">Crucial steps before submitting documents to customs/carriers</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-3 text-sm text-amber-900">
+              <li className="flex items-start gap-2">
+                <Checkbox id="hs-code" className="data-[state=checked]:bg-amber-600 border-amber-400" />
+                <label htmlFor="hs-code" className="cursor-pointer leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 pt-0.5"> Did you include HS code / commodity code?</label>
+              </li>
+              <li className="flex items-start gap-2">
+                <Checkbox id="incoterms" className="data-[state=checked]:bg-amber-600 border-amber-400" />
+                <label htmlFor="incoterms" className="cursor-pointer leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 pt-0.5">Are Incoterms clearly stated (e.g., EXW, FOB, DAP)?</label>
+              </li>
+              <li className="flex items-start gap-2">
+                <Checkbox id="origin-cert" className="data-[state=checked]:bg-amber-600 border-amber-400" />
+                <label htmlFor="origin-cert" className="cursor-pointer leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 pt-0.5">Do you have Certificate of Origin (if required)?</label>
+              </li>
+              <li className="flex items-start gap-2">
+                <Checkbox id="commercial-invoice" className="data-[state=checked]:bg-amber-600 border-amber-400" />
+                <label htmlFor="commercial-invoice" className="cursor-pointer leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 pt-0.5">Commercial Invoice uploaded & complete?</label>
+              </li>
+              <li className="flex items-start gap-2">
+                <Checkbox id="packing-list" className="data-[state=checked]:bg-amber-600 border-amber-400" />
+                <label htmlFor="packing-list" className="cursor-pointer leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 pt-0.5">Packing List attached?</label>
+              </li>
+              <li className="flex items-start gap-2">
+                <Checkbox id="sanctions" className="data-[state=checked]:bg-amber-600 border-amber-400" />
+                <label htmlFor="sanctions" className="cursor-pointer leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 pt-0.5">Checked sanctions/denied parties list?</label>
+              </li>
+            </ul>
+          </CardContent>
+          <CardFooter className="text-xs text-amber-700 font-medium">
+            Missing any? Add now in <Link to="/documents" className="underline ml-1 hover:text-amber-900">Documents → Upload & Autofill</Link>
+          </CardFooter>
+        </Card>
+
+        {/* 5. GATED: AI Risk Analysis Overlay example */}
+        <AiRiskAnalysisSection />
       </div>
     </div>
   );
 };
+
+function AiRiskAnalysisSection() {
+  const hasAccess = useFeature("COMPLIANCE_AI");
+
+  if (!hasAccess) {
+    return (
+      <div className="relative rounded-lg border border-gray-200 bg-gray-50 p-6 overflow-hidden">
+        <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-10">
+          <div className="text-center">
+            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Lock className="w-6 h-6 text-gray-500" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">AI Risk Analysis</h3>
+            <p className="text-sm text-gray-500 mb-4 max-w-sm mx-auto">
+              Upgrade to Pro to automatically flag compliance risks, sanction checks, and HS code errors.
+            </p>
+            <Button variant="default" asChild>
+              <Link to="/payments?tab=subscription">Upgrade to Pro</Link>
+            </Button>
+          </div>
+        </div>
+
+        {/* Blurred background content */}
+        <div className="opacity-40 pointer-events-none filter blur-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">AI Compliance Risk Report</h2>
+            <span className="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded-full font-medium">High Risk Detecte</span>
+          </div>
+          <div className="h-32 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Card className="bg-purple-50 border-purple-200">
+      <CardHeader>
+        <CardTitle className="text-purple-900 flex items-center gap-2">
+          <span>🤖</span> AI Compliance Analysis
+        </CardTitle>
+        <CardDescription className="text-purple-700"> Automated risk detection active.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center gap-3 p-3 bg-white rounded border border-purple-100 shadow-sm">
+          <CheckCircle className="text-green-500 w-5 h-5" />
+          <div>
+            <p className="text-sm font-medium text-gray-900">No sanctions detected</p>
+            <p className="text-xs text-gray-500">All parties cleared against OFAC/EU lists.</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
 
 export default CompliancePage;
