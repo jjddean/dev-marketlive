@@ -1,7 +1,5 @@
 # Clerk Authentication with React and Vite
 
-[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen)](https://dev-marketlive.vercel.app)
-
 This project demonstrates how to implement authentication in a React application using [Clerk](https://clerk.com/).
 
 > **Latest Update:** v1.0.1 - Performance Fixes & Compliance UI (Deployed: Jan 27, 2026)
