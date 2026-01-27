@@ -9,7 +9,7 @@ import {
   useUser
 } from '@clerk/clerk-react';
 import { Button } from '@/components/ui/button';
-import { Routes, Route, Navigate, useLocation, BrowserRouter } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, BrowserRouter, Outlet } from 'react-router-dom';
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { ConvexReactClient } from "convex/react";
 import { Toaster } from 'sonner';
@@ -176,7 +176,7 @@ export default function App() {
 
               <Route path="/about" element={<AboutPage />} />
               <Route path="/contact" element={<ContactPage />} />
-              <Route path="/api" element={<ClientSidebar><ApiDocsPage /></ClientSidebar>} />
+
 
               <Route path="/access" element={<WaitlistPage />} />
 
@@ -207,18 +207,27 @@ export default function App() {
                 </ProtectedRoute>
               } />
 
-              {/* Protected User Routes with Client Sidebar */}
-              <Route path="/dashboard" element={<ClientSidebar><DashboardPage /></ClientSidebar>} />
-              <Route path="/shipments" element={<ClientSidebar><ShipmentsPage /></ClientSidebar>} />
-              <Route path="/account" element={<ClientSidebar><AccountPage /></ClientSidebar>} />
-              <Route path="/quotes" element={<ClientSidebar><ClientQuotesPage /></ClientSidebar>} />
-              <Route path="/bookings" element={<ClientSidebar><ClientBookingsPage /></ClientSidebar>} />
-              <Route path="/payments" element={<ClientSidebar><PaymentsPage /></ClientSidebar>} />
-              <Route path="/documents" element={<ClientSidebar><DocumentsPage /></ClientSidebar>} />
-              <Route path="/documents/print/:documentId" element={<DocumentPrintPage />} />
-              <Route path="/compliance" element={<ClientSidebar><CompliancePage /></ClientSidebar>} />
-              <Route path="/reports" element={<ClientSidebar><ReportsPage /></ClientSidebar>} />
+              {/* Protected Client Routes (Wrapped in ProtectedRoute & ClientSidebar) */}
+              <Route element={
+                <ProtectedRoute>
+                  <ClientSidebar>
+                    <Outlet />
+                  </ClientSidebar>
+                </ProtectedRoute>
+              }>
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/shipments" element={<ShipmentsPage />} />
+                <Route path="/account" element={<AccountPage />} />
+                <Route path="/quotes" element={<ClientQuotesPage />} />
+                <Route path="/bookings" element={<ClientBookingsPage />} />
+                <Route path="/payments" element={<PaymentsPage />} />
+                <Route path="/documents" element={<DocumentsPage />} />
+                <Route path="/compliance" element={<CompliancePage />} />
+                <Route path="/reports" element={<ReportsPage />} />
+                <Route path="/api" element={<ApiDocsPage />} />
+              </Route>
 
+              <Route path="/documents/print/:documentId" element={<DocumentPrintPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Layout>
