@@ -1,0 +1,252 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - generic:
+      - button:
+        - img
+    - region "Notifications alt+T"
+    - main:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - link:
+                  - /url: /dashboard
+                  - img
+                  - generic: Clearship®
+              - generic:
+                - generic:
+                  - generic:
+                    - list:
+                      - listitem:
+                        - link:
+                          - /url: /dashboard
+                          - img
+                          - generic: Dashboard
+                      - listitem:
+                        - link:
+                          - /url: /shipments
+                          - img
+                          - generic: Shipments
+                      - listitem:
+                        - link:
+                          - /url: /bookings
+                          - img
+                          - generic: Bookings
+                      - listitem:
+                        - link:
+                          - /url: /quotes
+                          - img
+                          - generic: Quotes
+                - generic:
+                  - generic: Documents
+                  - generic:
+                    - list:
+                      - listitem:
+                        - link:
+                          - /url: /payments
+                          - img
+                          - generic: Payments
+                      - listitem:
+                        - link:
+                          - /url: /documents
+                          - img
+                          - generic: Documents
+                      - listitem:
+                        - link:
+                          - /url: /compliance
+                          - img
+                          - generic: Compliance
+                      - listitem:
+                        - link:
+                          - /url: /reports
+                          - img
+                          - generic: Reports
+                - generic:
+                  - generic:
+                    - list:
+                      - listitem:
+                        - link:
+                          - /url: /account
+                          - img
+                          - generic: Account
+                      - listitem:
+                        - link:
+                          - /url: /api
+                          - img
+                          - generic: Dev API
+              - generic:
+                - list:
+                  - listitem:
+                    - generic:
+                      - generic:
+                        - generic: Guest
+        - main:
+          - generic:
+            - generic:
+              - button:
+                - img
+                - generic: Toggle Sidebar
+              - heading [level=1]: Compliance
+              - generic:
+                - generic:
+                  - button:
+                    - img
+          - generic:
+            - generic:
+              - generic:
+                - img
+                - generic:
+                  - generic:
+                    - paragraph: Regulatory Center
+                    - heading [level=1]: Compliance
+                    - paragraph: Manage KYC, document uploads, and trade compliance tasks.
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: ⏳
+                      - heading [level=3]: Pending Reviews
+                    - paragraph: "0"
+                    - paragraph: Actions required to proceed
+                  - generic:
+                    - generic:
+                      - generic: ✅
+                      - heading [level=3]: Verified Docs
+                    - paragraph: "0"
+                    - paragraph: Cleared and validated
+                  - generic:
+                    - generic:
+                      - generic: 🛡️
+                      - heading [level=3]: KYC Status
+                    - paragraph: ACTION REQUIRED
+                    - paragraph: Identity verification needed
+                - generic:
+                  - generic:
+                    - heading [level=2]: Urgent Compliance Tasks
+                  - generic:
+                    - generic:
+                      - img
+                      - paragraph: All clear
+                      - paragraph: No urgent compliance actions required.
+                - generic:
+                  - generic:
+                    - generic:
+                      - heading [level=3]:
+                        - generic: 🛡️
+                        - text: Compliance Hub
+                      - paragraph: Keep your KYC documentation up to date to ensure seamless customs clearance. Active verification reduces shipment delays by up to 40%.
+                    - button: Start KYC Process
+                  - generic:
+                    - heading [level=3]: Quick Links
+                    - list:
+                      - listitem:
+                        - link:
+                          - /url: https://www.gov.uk/export-goods
+                          - text: UK Government Export Guide
+                      - listitem:
+                        - link:
+                          - /url: https://www.gov.uk/trade-tariff
+                          - text: Trade Tariff Codes (HS Codes)
+                      - listitem:
+                        - link:
+                          - /url: https://www.gov.uk/government/publications/the-uk-sanctions-list
+                          - text: Sanctions Search Engine
+                - generic:
+                  - generic:
+                    - heading [level=2]: Document Templates
+                    - paragraph: Download templates for commonly required shipping documents.
+                  - generic:
+                    - generic:
+                      - generic: 📄
+                      - generic:
+                        - generic: Commercial Invoice
+                        - text: Value declaration
+                    - generic:
+                      - generic: 🚢
+                      - generic:
+                        - generic: Bill of Lading
+                        - text: Freight receipt
+                    - generic:
+                      - generic: 🌍
+                      - generic:
+                        - generic: Certificate of Origin
+                        - text: Source validation
+                    - generic:
+                      - generic: ⚠️
+                      - generic:
+                        - generic: Dangerous Goods Declaration
+                        - text: Hazmat declaration
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: 📋
+                      - text: Customs Clearance Checklist
+                    - generic: Crucial steps before submitting documents to customs/carriers
+                  - generic:
+                    - list:
+                      - listitem:
+                        - checkbox
+                        - generic: Did you include HS code / commodity code?
+                      - listitem:
+                        - checkbox
+                        - generic: Are Incoterms clearly stated (e.g., EXW, FOB, DAP)?
+                      - listitem:
+                        - checkbox
+                        - generic: Do you have Certificate of Origin (if required)?
+                      - listitem:
+                        - checkbox
+                        - generic: Commercial Invoice uploaded & complete?
+                      - listitem:
+                        - checkbox
+                        - generic: Packing List attached?
+                      - listitem:
+                        - checkbox
+                        - generic: Checked sanctions/denied parties list?
+                  - generic:
+                    - text: Missing any? Add now in
+                    - link:
+                      - /url: /documents
+                      - text: Documents → Upload & Autofill
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img
+                      - heading [level=3]: AI Risk Analysis
+                      - paragraph: Upgrade to Pro to automatically flag compliance risks, sanction checks, and HS code errors.
+                      - link:
+                        - /url: /payments?tab=subscription
+                        - text: Upgrade to Pro
+                  - generic:
+                    - generic:
+                      - heading [level=2]: AI Compliance Risk Report
+                      - generic: High Risk Detecte
+  - dialog "Identity Verification (KYC)" [ref=e2]:
+    - generic [ref=e3]:
+      - heading "Identity Verification (KYC)" [level=2] [ref=e4]:
+        - img [ref=e5]
+        - text: Identity Verification (KYC)
+      - paragraph [ref=e8]: Complete the following steps to verify your business identity for international shipping.
+    - generic [ref=e10]:
+      - generic [ref=e11]:
+        - generic [ref=e12]:
+          - generic [ref=e13]: Company Name *
+          - textbox "Acme Logistics Ltd" [ref=e14]: Playwright Logistics Ltd
+        - generic [ref=e15]:
+          - text: Country of Registration
+          - textbox [disabled] [ref=e16]: United Kingdom
+        - generic [ref=e17]:
+          - generic [ref=e18]: Registration Number (CRN) *
+          - textbox "12345678" [ref=e19]: "99998888"
+        - generic [ref=e20]:
+          - text: VAT Number (Optional)
+          - textbox "GB 123 4567 89" [ref=e21]
+      - button "Continue" [active] [ref=e23] [cursor=pointer]
+    - button "Close" [ref=e24] [cursor=pointer]:
+      - img [ref=e25]
+      - generic [ref=e28]: Close
+```

@@ -71,11 +71,7 @@ const DashboardPage = () => {
   // Current logic: If live data is empty, show hardcoded. This confuses users when switching orgs.
   // NEW LOGIC: If we are in an ORG, and data is empty, show "No Shipments in [Org Name]".
   // If we are in Personal, and data is empty, show Hardcoded (for first time exp).
-  const showHardcoded = !organization && (!liveShipments || liveShipments.length === 0);
-
-  const displayShipments = (liveShipments && liveShipments.length > 0)
-    ? recentShipments
-    : (showHardcoded ? HARDCODED_SHIPMENTS : []);
+  const displayShipments = recentShipments;
 
 
   const shipmentColumns = [

@@ -313,3 +313,22 @@ export const getDocumentById = query({
     return await ctx.db.get(documentId);
   },
 });
+
+// Explicitly mark as signed (called on return from embedded signing)
+export const markDocumentSigned = mutation({
+  args: { documentId: v.id("documents") },
+  handler: async (ctx, { documentId }) => {
+    const doc = await ctx.db.get(documentId);
+    if (!doc) throw new Error("Document not found");
+
+    await ctx.db.patch(documentId, {
+      status: 'approved',
+      docusign: {
+        ...doc.docusign,
+        status: 'signed',
+        lastUpdated: Date.now()
+      } as any,
+      updatedAt: Date.now()
+    });
+  }
+});

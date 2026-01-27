@@ -29,7 +29,8 @@ import {
 } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { FileText, FileBadge, FileWarning, Upload, Eye, Send, RefreshCw, CheckCircle, Share2, Printer } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { FileText, FileBadge, FileWarning, Upload, Eye, Send, RefreshCw, CheckCircle, Share2, Printer, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 const DocumentsPage = () => {
@@ -40,14 +41,62 @@ const DocumentsPage = () => {
 
     // Notifications
     const createNotification = useMutation(api.notifications.create);
+    const markDocumentSigned = useMutation((api as any).documents.markDocumentSigned);
+    const sendEmail = useAction((api as any).emails.sendEmail);
+    const { user } = useUser();
+
+    const [processingReturn, setProcessingReturn] = useState(false);
 
     // Check for DocuSign Return
     useEffect(() => {
-        if (searchParams.get('event') === 'signing_complete') {
-            toast.success("Document Signed Successfully!", {
-                duration: 5000,
-                icon: '✍️'
-            });
+        const event = searchParams.get('event');
+        const docId = searchParams.get('documentId');
+
+        if (event === 'signing_complete') {
+            setProcessingReturn(true);
+
+            // Auto-update status if docId is present
+            if (docId) {
+                markDocumentSigned({ documentId: docId as any })
+                    .then(async () => {
+                        toast.success("Document Signed!", {
+                            duration: 5000,
+                            icon: '✅'
+                        });
+
+                        // Send Email Confirmation
+                        if (user?.primaryEmailAddress?.emailAddress) {
+                            await sendEmail({
+                                to: user.primaryEmailAddress.emailAddress,
+                                subject: "Document Successfully Signed - MarketLive",
+                                html: `
+                                    <h1>Document Signed</h1>
+                                    <p>Your document (ID: ${docId}) has been successfully signed and processed.</p>
+                                    <p>You can view and downlaod it from your dashboard.</p>
+                                    <br/>
+                                    <p>Best,<br/>MarketLive Team</p>
+                                `
+                            });
+                        }
+                    })
+                    .catch(console.error)
+                    .finally(() => {
+                        // Delay clearing the overlay slightly for visual smoothness
+                        setTimeout(() => {
+                            setProcessingReturn(false);
+                            // Clean up URL
+                            setSearchParams(params => {
+                                params.delete('event');
+                                params.delete('documentId');
+                                return params;
+                            });
+                        }, 2000);
+                    });
+            } else {
+                toast.success("Document Signed Successfully!", { duration: 5000 });
+                setProcessingReturn(false);
+                setSearchParams(params => { params.delete('event'); return params; });
+            }
 
             // Create Persistent Notification
             createNotification({
@@ -57,14 +106,8 @@ const DocumentsPage = () => {
                 priority: 'medium',
                 actionUrl: '/documents'
             });
-
-            // Clean up URL
-            setSearchParams(params => {
-                params.delete('event');
-                return params;
-            });
         }
-    }, [searchParams, setSearchParams, createNotification]);
+    }, [searchParams, setSearchParams, createNotification, markDocumentSigned, sendEmail, user]);
 
     // Live documents from Convex
     const { orgId } = useAuth();
@@ -94,6 +137,8 @@ const DocumentsPage = () => {
     const [sendDoc, setSendDoc] = useState<any>(null);
     const [recipientName, setRecipientName] = useState('');
     const [recipientEmail, setRecipientEmail] = useState('');
+    const [recipientCompany, setRecipientCompany] = useState('');
+    const [saveToContacts, setSaveToContacts] = useState(false);
     const [sending, setSending] = useState(false);
 
     const [refreshingId, setRefreshingId] = useState<string | null>(null);
@@ -104,6 +149,10 @@ const DocumentsPage = () => {
     const setDocusignEnvelope = useMutation(api.documents.setDocusignEnvelope);
     const generateShareLink = useMutation((api as any).documents.generateShareLink);
     const sendEnvelope = useAction((api as any).docusign.sendEnvelope);
+
+    // Contacts
+    const contacts = useQuery((api as any).contacts.listContacts) || [];
+    const createContact = useMutation((api as any).contacts.createContact);
 
     // --- Actions ---
 
@@ -116,6 +165,11 @@ const DocumentsPage = () => {
         setSendDoc(doc);
         setSendOpen(true);
         setDetailOpen(false);
+        // Reset form
+        setRecipientName('');
+        setRecipientEmail('');
+        setRecipientCompany('');
+        setSaveToContacts(false);
     };
 
     const handleSendForSignature = async () => {
@@ -129,6 +183,21 @@ const DocumentsPage = () => {
         toast.info("Connecting to DocuSign...");
 
         try {
+            // 1. Save Contact if Requested
+            if (saveToContacts) {
+                try {
+                    await createContact({
+                        name: recipientName,
+                        email: recipientEmail,
+                        company: recipientCompany || undefined
+                    });
+                    toast.success("Contact Saved to Address Book");
+                } catch (cErr) {
+                    console.error("Failed to save contact:", cErr);
+                    // Don't block sending
+                }
+            }
+
             // REAL DOCUSIGN INTEGRATION
             console.log("Calling api.docusign.sendEnvelope...");
 
@@ -136,7 +205,7 @@ const DocumentsPage = () => {
                 documentId: sendDoc._id,
                 signerName: recipientName,
                 signerEmail: recipientEmail,
-                returnUrl: `${window.location.origin}/documents?event=signing_complete`
+                returnUrl: `${window.location.origin}/documents?event=signing_complete&documentId=${sendDoc._id}`
             });
 
             console.log("Msg Sent Result:", result);
@@ -453,6 +522,15 @@ const DocumentsPage = () => {
                 </SheetContent>
             </Sheet>
 
+            {/* --- PROCESSING OVERLAY --- */}
+            {processingReturn && (
+                <div className="fixed inset-0 bg-white z-[9999] flex flex-col items-center justify-center animate-in fade-in duration-300">
+                    <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-6"></div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Finalizing Signature</h2>
+                    <p className="text-gray-500">Securely updating document status...</p>
+                </div>
+            )}
+
             <Drawer open={sendOpen} onOpenChange={setSendOpen} shouldScaleBackground={false}>
                 <DrawerContent className="max-w-md mx-auto">
                     <DrawerHeader>
@@ -460,13 +538,63 @@ const DocumentsPage = () => {
                         <DrawerDescription>Simulate sending via DocuSign</DrawerDescription>
                     </DrawerHeader>
                     <div className="p-4 space-y-4">
+                        <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 flex items-start gap-3">
+                            <Users className="h-5 w-5 text-blue-600 mt-0.5" />
+                            <div>
+                                <p className="text-sm font-medium text-blue-900">Send to Contact</p>
+                                <p className="text-xs text-blue-700">Select a saved contact or enter new details.</p>
+                            </div>
+                        </div>
+
+                        {/* Saved Contacts Dropdown */}
+                        {contacts && contacts.length > 0 && (
+                            <div className="space-y-2">
+                                <Label>Load from Address Book</Label>
+                                <select
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    onChange={(e) => {
+                                        const contact = contacts.find((c: any) => c._id === e.target.value);
+                                        if (contact) {
+                                            setRecipientName(contact.name);
+                                            setRecipientEmail(contact.email);
+                                            setRecipientCompany(contact.company || '');
+                                        }
+                                    }}
+                                    defaultValue=""
+                                >
+                                    <option value="" disabled>-- Select a Contact --</option>
+                                    {contacts.map((c: any) => (
+                                        <option key={c._id} value={c._id}>
+                                            {c.name} ({c.email}) {c.company ? `- ${c.company}` : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+
                         <div className="space-y-2">
                             <Label>Recipient Name</Label>
-                            <Input value={recipientName} onChange={e => setRecipientName(e.target.value)} />
+                            <Input value={recipientName} onChange={e => setRecipientName(e.target.value)} placeholder="e.g. John Doe" />
                         </div>
                         <div className="space-y-2">
                             <Label>Recipient Email</Label>
-                            <Input value={recipientEmail} onChange={e => setRecipientEmail(e.target.value)} />
+                            <Input value={recipientEmail} onChange={e => setRecipientEmail(e.target.value)} placeholder="name@company.com" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Company (Optional)</Label>
+                            <Input value={recipientCompany} onChange={e => setRecipientCompany(e.target.value)} placeholder="e.g. Acme Inc." />
+                        </div>
+
+                        {/* Save Checkbox */}
+                        <div className="flex items-center space-x-2 pt-2">
+                            <Checkbox
+                                id="saveContact"
+                                checked={saveToContacts}
+                                onCheckedChange={(checked) => setSaveToContacts(checked as boolean)}
+                            />
+                            <Label htmlFor="saveContact" className="cursor-pointer font-normal text-gray-600">
+                                Save to my Address Book?
+                            </Label>
                         </div>
                     </div>
                     <DrawerFooter>

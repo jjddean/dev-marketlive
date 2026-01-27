@@ -238,7 +238,7 @@ export const listShipments = query({
       list = await ctx.db
         .query("shipments")
         .withIndex("byUserId", (q) => q.eq("userId", user._id))
-        .filter((q) => q.eq(q.field("orgId"), undefined))
+        // .filter((q) => q.eq(q.field("orgId"), undefined))
         .collect();
     }
 

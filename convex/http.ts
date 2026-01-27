@@ -1,3 +1,4 @@
+import { clerk } from "./clerk";
 import { internal } from "./_generated/api";
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
@@ -42,35 +43,46 @@ http.route({
       case "customer.subscription.updated":
       case "customer.subscription.deleted": {
         const status = object.status;
-        // Map price ID to Plan/Tier (Simple mapping for now)
         const planId = object.items?.data?.[0]?.price?.id;
-        // Logic to determine "tier" from price or metadata
-        // For now, assume if it exists it is 'pro' unless enterprise
         const tier = object.metadata?.plan || (planId ? "pro" : "free");
 
-        await ctx.runMutation(internal.stripe.handleSubscriptionChange, {
+        const result = await ctx.runMutation(internal.paymentsData.handleSubscriptionChange, {
           stripeCustomerId: object.customer as string,
-          userId: object.metadata?.userId, // We embedded this in checkout session
+          userId: object.metadata?.userId,
           status: status,
-          plan: tier, // e.g. "pro"
-          tier: tier  // e.g. "pro"
+          plan: tier,
+          tier: tier
         });
+
+        // Sync Clerk Metadata (Node.js Action Logic)
+        if (result && result.userId) {
+          try {
+            if (result.orgId) {
+              await clerk.organizations.updateOrganization(result.orgId, {
+                publicMetadata: {
+                  subscriptionTier: tier,
+                  subscriptionStatus: status,
+                  planUpdatedAt: Date.now(),
+                },
+              });
+            } else {
+              await clerk.users.updateUser(result.userId, {
+                publicMetadata: {
+                  subscriptionTier: tier,
+                  subscriptionStatus: status,
+                  planUpdatedAt: Date.now(),
+                },
+              });
+            }
+          } catch (err) {
+            console.error("Failed to sync Clerk metadata from webhook:", err);
+          }
+        }
         break;
       }
 
       case "invoice.payment_succeeded": {
-        // Transform data using our existing helper if applicable
-        // Note: Our transformWebhookData was built for Clerk's format likely, 
-        // but let's check if we can adapt or just map manually.
-        // For safety, let's map manually here to avoid breaking type mismatches.
-
-        // Actually, let's skip complex transform and just rely on metadata / basic fields 
-        // if strict typing is hard.
-        // But we need to match `paymentAttemptTypes` validator.
-        // Let's implement a minimal Record generic mapper for now.
-        if (object.billing_reason === 'subscription_cycle' || object.billing_reason === 'subscription_create') {
-          // It's a sub payment
-        }
+        // Handle payment success logic if needed
         break;
       }
     }
@@ -109,7 +121,6 @@ http.route({
         break;
       }
 
-      // Organization events - sync to Convex
       case "organization.created":
       case "organization.updated":
         await ctx.runMutation(internal.organizations.upsertFromClerk, {
@@ -123,7 +134,6 @@ http.route({
         break;
       }
 
-      // Organization membership events - update user's org
       case "organizationMembership.created":
       case "organizationMembership.updated": {
         const memberData = event.data as any;
@@ -139,7 +149,7 @@ http.route({
         const memberData = event.data as any;
         await ctx.runMutation(internal.organizations.updateUserOrgMembership, {
           clerkUserId: memberData.public_user_data?.user_id,
-          clerkOrgId: undefined, // Remove org association
+          clerkOrgId: undefined,
           role: undefined,
         });
         break;

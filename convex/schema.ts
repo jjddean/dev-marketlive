@@ -2,7 +2,7 @@
 
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-// Force rebuild 2
+// Force rebuild 3
 
 import { paymentAttemptSchemaValidator } from "./paymentAttemptTypes";
 
@@ -377,4 +377,14 @@ export default defineSchema({
     status: v.string(), // "active", "revoked"
   }).index("by_user", ["userId"])
     .index("by_key", ["key"]),
+  contacts: defineTable({
+    name: v.string(),
+    email: v.string(),
+    company: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    userId: v.optional(v.string()), // Clerk User ID (Owner)
+    orgId: v.optional(v.string()), // Multi-tenancy
+    createdAt: v.number(),
+  }).index("byUserId", ["userId"])
+    .index("byOrgId", ["orgId"]),
 }); 

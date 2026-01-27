@@ -29,58 +29,60 @@ const ReportsPage = () => {
     totalBookings: bookings.length,
   }), [shipments, quotes, bookings]);
 
-  const recentReports = [
-    {
-      id: 'RPT-2024-042',
-      name: 'Monthly Shipping Summary',
-      date: '2024-07-31',
-      type: 'Automated',
-      status: 'Generated',
-      size: '2.4 MB'
-    },
-    {
-      id: 'RPT-2024-041',
-      name: 'Route Cost Analysis',
-      date: '2024-07-25',
-      type: 'Custom',
-      status: 'Generated',
-      size: '1.8 MB'
-    },
-    {
-      id: 'RPT-2024-040',
-      name: 'Carrier Performance',
-      date: '2024-07-20',
-      type: 'Automated',
-      status: 'Generated',
-      size: '3.2 MB'
-    },
-    {
-      id: 'RPT-2024-039',
-      name: 'Documentation Compliance',
-      date: '2024-07-15',
-      type: 'Custom',
-      status: 'Generated',
-      size: '1.1 MB'
-    },
-  ];
+  // Dynamic Reports Data
+  // In V1, we don't have a backend for "saved reports" yet, so this should be empty
+  // unless we want to show generated ones. For now, let's keep it clean.
+  const recentReports: any[] = []; 
 
-  // Mock data for analytics
-  const monthlyShipments = [
-    { month: 'Mar', count: 12, value: 45000 },
-    { month: 'Apr', count: 19, value: 67000 },
-    { month: 'May', count: 15, value: 52000 },
-    { month: 'Jun', count: 22, value: 78000 },
-    { month: 'Jul', count: 28, value: 95000 },
-    { month: 'Aug', count: 10, value: 38000 },
-  ];
+  // Aggregated Analytics Data
+  const monthlyShipments = useMemo(() => {
+    if (!shipments.length) {
+      // Return empty placeholder structure for charts to render "0" states comfortably
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+      return months.map(m => ({ month: m, count: 0, value: 0 }));
+    }
 
-  const carrierDistribution = [
-    { carrier: 'Maersk Line', percentage: 35, shipments: 42 },
-    { carrier: 'COSCO Shipping', percentage: 25, shipments: 30 },
-    { carrier: 'MSC', percentage: 20, shipments: 24 },
-    { carrier: 'Hapag-Lloyd', percentage: 15, shipments: 18 },
-    { carrier: 'Others', percentage: 5, shipments: 6 },
-  ];
+    // Simple aggregation by month (mocking the date parsing slightly as we rely on createdAt)
+    const monthMap = new Map<string, { count: number, value: number }>();
+    
+    shipments.forEach((s: any) => {
+      const date = new Date(s._creationTime || Date.now());
+      const month = date.toLocaleString('default', { month: 'short' });
+      const current = monthMap.get(month) || { count: 0, value: 0 };
+      
+      // Parse value if possible, else 0
+      const valStr = s.shipmentDetails?.value || "0";
+      const val = parseFloat(valStr.replace(/[^0-9.]/g, '')) || 0;
+
+      monthMap.set(month, {
+        count: current.count + 1,
+        value: current.value + val
+      });
+    });
+
+    return Array.from(monthMap.entries()).map(([month, data]) => ({
+      month,
+      count: data.count,
+      value: data.value
+    }));
+  }, [shipments]);
+
+  const carrierDistribution = useMemo(() => {
+    if (!shipments.length) return [];
+
+    const carrierCounts = new Map<string, number>();
+    shipments.forEach((s: any) => {
+      const c = s.carrier || 'Unknown';
+      carrierCounts.set(c, (carrierCounts.get(c) || 0) + 1);
+    });
+
+    const total = shipments.length;
+    return Array.from(carrierCounts.entries()).map(([carrier, count]) => ({
+      carrier,
+      percentage: Math.round((count / total) * 100),
+      shipments: count
+    })).sort((a, b) => b.shipments - a.shipments);
+  }, [shipments]);
 
   const reportColumns = [
     { key: 'id' as keyof typeof recentReports[0], header: 'Report ID', sortable: true },

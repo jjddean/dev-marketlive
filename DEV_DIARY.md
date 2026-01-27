@@ -84,3 +84,31 @@ This log documents the major stages of development for the Clearrship / MarketLi
 
 - [ ] **Advanced Analytics**: Reporting dashboard for Pro users.
 - [ ] **Mobile App**: React Native or PWA adaptation.
+
+## Phase 7: Logistics Integration & Debugging (In Progress - v0.9.0)
+**Goal:** Finalize third-party API integrations and stabilize the build.
+- [x] **Bug Fixes**:
+  - Fixed `500 Server Error` on Shipments Page (Missing `useOrganization` import).
+  - Fixed TypeScript build failures in `payments.ts` and `stripe.ts` (Clerk SDK signature mismatch).
+  - Fixed "Premature JSX Closure" error in `ShipmentsPage.tsx`.
+  - Fixed "Org ID Validation Error" in `convex/schema.ts` (Made `orgId` optional for personal users).
+- [x] **Frontend Improvements**:
+  - Expanded Quote Form to support **~70 global ports** (was hardcoded to 5).
+  - Connected `LiveRateComparison` component to real `createQuote` mutation (replaced mock service).
+  - **Freightos API Integration**:
+  - **Status**: Backend logic is wired, but `Freightos API Key` is currently invalid/rejected. Removed keys from environment to prevent errors.
+  
+- [ ] **AI Assistant**:
+  - **Status**: Error reported (`Invalid hook call`).
+  - **Action Item**: Fix component implementation in `AIAssistant.tsx` to enable chatbot.
+
+## Phase 8: Hardening & Release (Planned)
+- [ ] **Data Cleanup Script**: Reset database for fresh launch.
+- [ ] **End-to-End Testing**: Verify full flow (Quote -> Book -> Pay -> Track).
+- [ ] **Freigthos**: Re-integrate when new API keys are available.
+
+### Recent Critical Fixes (Subscription Module)
+- **Runtime Conflict**: Split Node.js (Stripe/Clerk) and V8 (Database) logic into `actions` and `mutations`.
+- **Authentication**: Fixed fail-open on `CLERK_SECRET_KEY` missing.
+- **Data Integrity**: Implemented `ensureUserExists` to prevent "payment without user" issues.
+- **UX**: Added forced token refresh (`window.location.reload`) to unlock features immediately after upgrade.

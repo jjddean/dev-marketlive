@@ -11,8 +11,8 @@ import DataTable from '@/components/ui/data-table';
 import { Checkbox } from "@/components/ui/checkbox";
 
 const AdminFinancePage = () => {
-    const invoices = useQuery(api.payments.listAllInvoices) || [];
-    const payments = useQuery(api.payments.listAllPayments) || [];
+    const invoices = useQuery(api.paymentsData.listAllInvoices) || [];
+    const payments = useQuery(api.paymentsData.listAllPayments) || [];
 
     const formatCurrency = (amount: number, currency: string) => {
         try {

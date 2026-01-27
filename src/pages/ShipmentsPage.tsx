@@ -9,7 +9,7 @@ import { useQuery, useAction, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Sparkles, Mail } from "lucide-react";
 import { toast } from 'sonner';
-import { useUser, useAuth } from "@clerk/clerk-react";
+import { useUser, useAuth, useOrganization } from "@clerk/clerk-react";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useFeature } from '@/hooks/useFeature';
@@ -46,6 +46,7 @@ const ShipmentsPage = () => {
   const [recipientEmail, setRecipientEmail] = useState("");
 
   const handleCreateTestShipment = async () => {
+
     const toastId = toast.loading("Creating shipment...");
     try {
       await createShipment({
@@ -161,11 +162,12 @@ const ShipmentsPage = () => {
     ]
   };
 
-  const { orgId } = useAuth();
+  const { organization } = useOrganization();
+  const orgId = organization?.id;
   const liveData = useQuery(api.shipments.listShipments, { orgId: orgId ?? null });
 
   // State for filtering - initialized with fallback, updated via effect
-  const [filteredShipments, setFilteredShipments] = useState(HARDCODED_SHIPMENTS);
+  const [filteredShipments, setFilteredShipments] = useState<{ active: any[], completed: any[] }>({ active: [], completed: [] });
 
   // Sync live data to state when it arrives
   useEffect(() => {
@@ -238,7 +240,7 @@ const ShipmentsPage = () => {
       value: s.shipmentDetails?.value || '',
       container: s.trackingNumber
     }))
-  } : HARDCODED_SHIPMENTS;
+  } : { active: [], completed: [] };
 
 
   // Search filters configuration
@@ -281,12 +283,12 @@ const ShipmentsPage = () => {
   ];
 
   const handleSearch = (searchTerm: string, filters: Record<string, any>) => {
-    let filtered = { ...currentShipments };
+    let filtered: any = { ...currentShipments };
 
     // Apply search term
     if (searchTerm) {
       Object.keys(filtered).forEach(tab => {
-        filtered[tab as keyof typeof filtered] = filtered[tab as keyof typeof filtered].filter(shipment =>
+        filtered[tab] = filtered[tab].filter((shipment: any) =>
           Object.values(shipment).some(value =>
             String(value).toLowerCase().includes(searchTerm.toLowerCase())
           )
@@ -296,7 +298,7 @@ const ShipmentsPage = () => {
 
     // Apply filters
     Object.keys(filtered).forEach(tab => {
-      filtered[tab as keyof typeof filtered] = filtered[tab as keyof typeof filtered].filter(shipment => {
+      filtered[tab] = filtered[tab].filter((shipment: any) => {
         return Object.entries(filters).every(([key, value]) => {
           if (!value) return true;
 
@@ -472,99 +474,120 @@ const ShipmentsPage = () => {
             </span>
           </h2>
 
-          <div className="flex space-x-3">
-            <Button variant="outline">Export</Button>
-            <Button onClick={handleCreateTestShipment}>New Shipment</Button>
+          {/* Usage Indicator for Free Plan */}
+          {!hasPredictiveInsights && (
+            <div className="flex items-center mr-4">
+              <div className="text-xs text-gray-500 mr-2">
+                <span className="font-medium text-gray-900">{filteredShipments.active.length}</span>
+                /5 Free Shipments
+              </div>
+              <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className={`h-full ${filteredShipments.active.length >= 5 ? 'bg-red-500' : 'bg-blue-500'}`}
+                  style={{ width: `${Math.min(100, (filteredShipments.active.length / 5) * 100)}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          <Button variant="outline">Export</Button>
+          <Button
+            onClick={handleCreateTestShipment}
+            disabled={!hasPredictiveInsights && filteredShipments.active.length >= 5}
+            className={!hasPredictiveInsights && filteredShipments.active.length >= 5 ? "opacity-50 cursor-not-allowed" : ""}
+          >
+            {!hasPredictiveInsights && filteredShipments.active.length >= 5 ? "Limit Reached" : "New Shipment"}
+          </Button>
+        </div>
+      </div>
+
+      {/* Shipments Table */}
+      <DataTable
+        data={filteredShipments[activeTab as keyof typeof filteredShipments]}
+        columns={shipmentColumns}
+        searchPlaceholder="Search within results..."
+        rowsPerPage={10}
+      />
+
+      {/* Real-Time Tracking for Active Shipments */}
+      {activeTab === 'active' && (
+        <div className="mt-8 space-y-8">
+          {/* Visual Progress Trackers */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center mb-4">
+              <span className="relative flex h-3 w-3 mr-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+              </span>
+              Live Fleet Tracking
+            </h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {(liveData && liveData.filter((s: any) => s.status !== 'Delivered').length > 0) ? (
+                liveData.filter((s: any) => s.status !== 'Delivered').slice(0, 2).map((s: any) => (
+                  <LiveVesselMap
+                    key={s.shipmentId}
+                    shipmentId={s.shipmentId}
+                    origin={s.shipmentDetails?.origin || 'Unknown'}
+                    destination={s.shipmentDetails?.destination || 'Unknown'}
+                    progress={s.progress || Math.floor(Math.random() * 60) + 20}
+                  />
+                ))
+              ) : (
+                <>
+                  <LiveVesselMap shipmentId="SH-2024-001" origin="London, UK" destination="Hamburg, DE" progress={72} />
+                  <LiveVesselMap shipmentId="SH-2024-002" origin="Shanghai, CN" destination="Felixstowe, UK" progress={35} />
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Global Map View */}
+          <div className="bg-white p-1 rounded-xl shadow-sm border border-gray-200 h-[500px]">
+            <div className="p-4 border-b border-gray-100 flex justify-between items-center">
+              <h3 className="font-semibold text-gray-900">Global Fleet Map</h3>
+              <span className="text-xs text-gray-500">Real-time GPS Visualization</span>
+            </div>
+            <div className="h-[440px] w-full rounded-b-lg overflow-hidden relative z-0">
+              <ShipmentMap />
+            </div>
           </div>
         </div>
+      )}
 
-        {/* Shipments Table */}
-        <DataTable
-          data={filteredShipments[activeTab as keyof typeof filteredShipments]}
-          columns={shipmentColumns}
-          searchPlaceholder="Search within results..."
-          rowsPerPage={10}
-        />
+      {/* Pre-Pickup Protocol (New) */}
+      <Card className="mt-8 bg-green-50 border-green-200">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-green-800 text-lg flex items-center gap-2">
+            <span>🚚</span> Pre-Pickup Protocol
+          </CardTitle>
+          <CardDescription className="text-green-600">Driver arrival checklist - ensure smooth handover.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm text-green-900">
+            <li className="flex items-center gap-2">
+              <Checkbox id="labels" className="data-[state=checked]:bg-green-600 border-green-400" />
+              <label htmlFor="labels" className="cursor-pointer">Labels printed & attached?</label>
+            </li>
+            <li className="flex items-center gap-2">
+              <Checkbox id="invoice-copies" className="data-[state=checked]:bg-green-600 border-green-400" />
+              <label htmlFor="invoice-copies" className="cursor-pointer">Commercial Invoice (3 copies)?</label>
+            </li>
+            <li className="flex items-center gap-2">
+              <Checkbox id="warehouse-contact" className="data-[state=checked]:bg-green-600 border-green-400" />
+              <label htmlFor="warehouse-contact" className="cursor-pointer">Warehouse contact notified?</label>
+            </li>
+            <li className="flex items-center gap-2">
+              <Checkbox id="cargo-access" className="data-[state=checked]:bg-green-600 border-green-400" />
+              <label htmlFor="cargo-access" className="cursor-pointer">Cargo accessible (not blocked)?</label>
+            </li>
+            <li className="flex items-center gap-2">
+              <Checkbox id="photos" className="data-[state=checked]:bg-green-600 border-green-400" />
+              <label htmlFor="photos" className="cursor-pointer">Photos taken (for insurance)?</label>
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
 
-        {/* Real-Time Tracking for Active Shipments */}
-        {activeTab === 'active' && (
-          <div className="mt-8 space-y-8">
-            {/* Visual Progress Trackers */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center mb-4">
-                <span className="relative flex h-3 w-3 mr-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                </span>
-                Live Fleet Tracking
-              </h3>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {(liveData && liveData.filter((s: any) => s.status !== 'Delivered').length > 0) ? (
-                  liveData.filter((s: any) => s.status !== 'Delivered').slice(0, 2).map((s: any) => (
-                    <LiveVesselMap
-                      key={s.shipmentId}
-                      shipmentId={s.shipmentId}
-                      origin={s.shipmentDetails?.origin || 'Unknown'}
-                      destination={s.shipmentDetails?.destination || 'Unknown'}
-                      progress={s.progress || Math.floor(Math.random() * 60) + 20}
-                    />
-                  ))
-                ) : (
-                  <>
-                    <LiveVesselMap shipmentId="SH-2024-001" origin="London, UK" destination="Hamburg, DE" progress={72} />
-                    <LiveVesselMap shipmentId="SH-2024-002" origin="Shanghai, CN" destination="Felixstowe, UK" progress={35} />
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Global Map View */}
-            <div className="bg-white p-1 rounded-xl shadow-sm border border-gray-200 h-[500px]">
-              <div className="p-4 border-b border-gray-100 flex justify-between items-center">
-                <h3 className="font-semibold text-gray-900">Global Fleet Map</h3>
-                <span className="text-xs text-gray-500">Real-time GPS Visualization</span>
-              </div>
-              <div className="h-[440px] w-full rounded-b-lg overflow-hidden relative z-0">
-                <ShipmentMap />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Pre-Pickup Protocol (New) */}
-        <Card className="mt-8 bg-green-50 border-green-200">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-green-800 text-lg flex items-center gap-2">
-              <span>🚚</span> Pre-Pickup Protocol
-            </CardTitle>
-            <CardDescription className="text-green-600">Driver arrival checklist - ensure smooth handover.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm text-green-900">
-              <li className="flex items-center gap-2">
-                <Checkbox id="labels" className="data-[state=checked]:bg-green-600 border-green-400" />
-                <label htmlFor="labels" className="cursor-pointer">Labels printed & attached?</label>
-              </li>
-              <li className="flex items-center gap-2">
-                <Checkbox id="invoice-copies" className="data-[state=checked]:bg-green-600 border-green-400" />
-                <label htmlFor="invoice-copies" className="cursor-pointer">Commercial Invoice (3 copies)?</label>
-              </li>
-              <li className="flex items-center gap-2">
-                <Checkbox id="warehouse-contact" className="data-[state=checked]:bg-green-600 border-green-400" />
-                <label htmlFor="warehouse-contact" className="cursor-pointer">Warehouse contact notified?</label>
-              </li>
-              <li className="flex items-center gap-2">
-                <Checkbox id="cargo-access" className="data-[state=checked]:bg-green-600 border-green-400" />
-                <label htmlFor="cargo-access" className="cursor-pointer">Cargo accessible (not blocked)?</label>
-              </li>
-              <li className="flex items-center gap-2">
-                <Checkbox id="photos" className="data-[state=checked]:bg-green-600 border-green-400" />
-                <label htmlFor="photos" className="cursor-pointer">Photos taken (for insurance)?</label>
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Shipment Details & Risk Analysis Sheet */}
       <Sheet open={!!selectedShipment} onOpenChange={(open) => !open && setSelectedShipment(null)}>
@@ -776,7 +799,7 @@ const ShipmentsPage = () => {
         </DialogContent>
       </Dialog>
 
-    </div>
+    </div >
   );
 };
 

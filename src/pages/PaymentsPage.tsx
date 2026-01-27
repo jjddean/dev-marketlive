@@ -27,9 +27,9 @@ const PaymentsPage = () => {
 
   // Checkout Action
   // const createCheckout = useAction(api.billing.createCheckoutSession);
-  const completeSubscription = useMutation(api.payments.completeSubscription);
+  const completeSubscription = useAction(api.payments.completeSubscription);
   const confirmBookingPayment = useMutation(api.bookings.confirmBookingPayment);
-  const createSubscriptionSession = useMutation(api.subscriptions.createCheckoutSession);
+  const createSubscriptionSession = useAction(api.subscriptions.createCheckoutSession);
 
   const handleUpgrade = async (priceId: string, plan: string) => {
     const toastId = toast.loading("Redirecting to checkout...");
@@ -78,7 +78,10 @@ const PaymentsPage = () => {
         completeSubscription({})
           .then(() => {
             toast.success("Payment Successful! Subscription Active.");
-            window.history.replaceState({}, document.title, window.location.pathname);
+            // Force reload to refresh Clerk token/claims
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
           })
           .catch((e) => console.error("Failed to complete subscription:", e));
       }
@@ -220,7 +223,7 @@ const PaymentsPage = () => {
         description: `Payment ${p.payment_id || ''}`
       }));
     }
-    return HARDCODED_INVOICES;
+    return [];
   }, [livePayments]);
 
   const invoiceColumns = [
@@ -392,7 +395,7 @@ const PaymentsPage = () => {
                     Advanced Analytics
                   </li>
                 </ul>
-                <Button onClick={() => handleUpgrade("price_1Pro...", "pro")} className="w-full">Switch to Pro</Button>
+                <Button onClick={() => handleUpgrade("price_1StLAaElmOA4YPwbAXH9o3Z0", "pro")} className="w-full">Switch to Pro</Button>
               </div>
 
               {/* Enterprise Plan */}
@@ -419,7 +422,7 @@ const PaymentsPage = () => {
                     SLA Guarantees
                   </li>
                 </ul>
-                <Button onClick={() => handleUpgrade("price_1Enterprise...", "enterprise")} variant="outline" className="w-full">Switch to Enterprise</Button>
+                <Button onClick={() => handleUpgrade("price_1StLDoElmOA4YPwbgS6cTUMP", "enterprise")} variant="outline" className="w-full">Switch to Enterprise</Button>
               </div>
 
             </div>

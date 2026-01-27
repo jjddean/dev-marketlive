@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import { useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { useOrganization } from "@clerk/clerk-react";
 import { Button } from '@/components/ui/button';
 import { getAllCarrierRates, type CarrierRate, type RateRequest } from '@/services/carriers';
 import { LandedCostTool } from '@/components/ui/landed-cost-tool';
@@ -31,22 +34,61 @@ const LiveRateComparison: React.FC<LiveRateComparisonProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(rateRequest)]);
 
+  // Mutation to fetch real Freightos rates
+  const requestQuote = useMutation(api.quotes.createQuote);
+  const { organization } = useOrganization();
+
   const fetchRates = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      console.log('Fetching live rates...', rateRequest);
-      const carrierRates = await getAllCarrierRates(rateRequest);
+      console.log('Fetching live rates via Freightos...', rateRequest);
+
+      // Call Convex Mutation
+      const result = await requestQuote({
+        request: {
+          origin: rateRequest.origin.city, // e.g. "Shanghai, CN"
+          destination: rateRequest.destination.city, // e.g. "London, UK"
+          serviceType: 'ocean', // Defaulting for simple search
+          cargoType: 'general',
+          weight: String(rateRequest.parcel.weight),
+          dimensions: {
+            length: String(rateRequest.parcel.length),
+            width: String(rateRequest.parcel.width),
+            height: String(rateRequest.parcel.height)
+          },
+          value: "1000",
+          incoterms: "FOB",
+          urgency: "standard",
+          additionalServices: [],
+          contactInfo: { name: "Guest", email: "guest@example.com", phone: "", company: "" }
+        },
+        orgId: organization?.id ?? undefined
+      });
+
+      // Map the backend quotes to the frontend CarrierRate type
+      const carrierRates: CarrierRate[] = result.quotes.map((q: any) => ({
+        carrier: q.carrierName,
+        service: q.serviceType,
+        cost: q.price.amount,
+        currency: q.price.currency,
+        transit_time: q.transitTime,
+        provider: 'freightos' as any,
+        co2_emission: q.serviceType.includes("Air") ? 450 : 85
+      }));
+
       setRates(carrierRates);
       onRatesFetched?.(carrierRates);
 
-      if (carrierRates.length === 0) {
-        setError('No rates available for this route');
-      }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching rates:', err);
-      setError('Failed to fetch shipping rates. Please try again.');
+      // Fallback: Show readable error to user
+      let msg = 'Failed to fetch shipping rates.';
+      if (err.message.includes("Could not find UN/LOCODE")) {
+        msg = "Route not supported. Please select major ports (e.g. Shanghai -> London).";
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }

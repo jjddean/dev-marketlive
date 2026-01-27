@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { SUPPORTED_PORTS } from '@/lib/ports';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import LiveRateComparison from '@/components/shipping/LiveRateComparison';
@@ -46,19 +47,29 @@ interface QuoteRequestFormProps {
 }
 
 const QuoteRequestForm: React.FC<QuoteRequestFormProps> = ({ onSubmit, onCancel, initialStep = 1, onStepChange }) => {
-  const [formData, setFormData] = useState<QuoteFormData>({
-    origin: '',
-    destination: '',
-    serviceType: 'ocean',
-    cargoType: 'general',
-    weight: '',
-    dimensions: { length: '', width: '', height: '' },
-    value: '',
-    incoterms: 'EXW',
-    urgency: 'standard',
-    additionalServices: [],
-    contactInfo: { name: '', email: '', phone: '', company: '' }
+  const [formData, setFormData] = useState<QuoteFormData>(() => {
+    const saved = localStorage.getItem('quoteFormDraft');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+    }
+    return {
+      origin: 'Shanghai',
+      destination: 'London',
+      serviceType: 'ocean',
+      cargoType: 'general',
+      weight: '1000',
+      dimensions: { length: '120', width: '100', height: '100' },
+      value: '5000',
+      incoterms: 'FOB',
+      urgency: 'standard',
+      additionalServices: [],
+      contactInfo: { name: 'Test Demo', email: 'demo@marketlive.com', phone: '555-0123', company: 'Demo Corp' }
+    };
   });
+
+  useEffect(() => {
+    localStorage.setItem('quoteFormDraft', JSON.stringify(formData));
+  }, [formData]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -209,10 +220,9 @@ const QuoteRequestForm: React.FC<QuoteRequestFormProps> = ({ onSubmit, onCancel,
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 >
                   <option value="">Select origin</option>
-                  <option value="London, UK">London, UK</option>
-                  <option value="Manchester, UK">Manchester, UK</option>
-                  <option value="Birmingham, UK">Birmingham, UK</option>
-                  <option value="Liverpool, UK">Liverpool, UK</option>
+                  {SUPPORTED_PORTS.map(port => (
+                    <option key={port} value={port}>{port}</option>
+                  ))}
                 </select>
                 {errors.origin && <p className="text-red-500 text-xs mt-1">{errors.origin}</p>}
               </div>
@@ -225,11 +235,9 @@ const QuoteRequestForm: React.FC<QuoteRequestFormProps> = ({ onSubmit, onCancel,
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 >
                   <option value="">Select destination</option>
-                  <option value="Hamburg, DE">Hamburg, DE</option>
-                  <option value="Rotterdam, NL">Rotterdam, NL</option>
-                  <option value="New York, US">New York, US</option>
-                  <option value="Shanghai, CN">Shanghai, CN</option>
-                  <option value="Dubai, AE">Dubai, AE</option>
+                  {SUPPORTED_PORTS.map(port => (
+                    <option key={port} value={port}>{port}</option>
+                  ))}
                 </select>
                 {errors.destination && <p className="text-red-500 text-xs mt-1">{errors.destination}</p>}
               </div>

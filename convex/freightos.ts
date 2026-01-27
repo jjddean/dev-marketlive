@@ -1,112 +1,83 @@
-import { action } from "./_generated/server";
-import { v } from "convex/values";
 
-// The endpoint provided by the user
-const FREIGHTOS_API_URL = "https://sandbox.freightos.com/api/v1/freightEstimates";
 
-export const testFreightosConnection = action({
-    args: {},
-    handler: async (ctx) => {
-        const apiKey = process.env.FREIGHTOS_API_KEY;
-        const appId = process.env.VITE_FREIGHTOS_APP_ID;
-        const secretKey = process.env.FREIGHTOS_SECRET_KEY;
+export interface EstimateRequest {
+    origin: string; // UN/LOCODE (e.g. USLAX)
+    destination: string; // UN/LOCODE (e.g. CNSHA)
+    load: {
+        quantity: number;
+        unitType: "boxes" | "pallets" | "container20" | "container40";
+        unitWeightKg: number;
+        unitVolumeCBM: number;
+    }[];
+}
 
-        console.log(`🔌 Connecting to: ${FREIGHTOS_API_URL}`);
-        console.log(`🔑 Keys available - API_KEY: ${!!apiKey}, SECRET_KEY: ${!!secretKey}, APP_ID: ${!!appId}`);
+interface PriceEstimate {
+    min: number;
+    max: number;
+}
 
-        // Define auth strategies to try
-        const strategies: { name: string; headers: Record<string, string> }[] = [
-            {
-                name: "Bearer API_KEY",
-                headers: {
-                    "Authorization": `Bearer ${apiKey}`,
-                    "Content-Type": "application/json"
-                }
+interface TransitTime {
+    min: number;
+    max: number;
+}
+
+interface ModeResponse {
+    priceEstimates?: PriceEstimate;
+    transitTime?: TransitTime;
+}
+
+export interface EstimateResponse {
+    OCEAN?: ModeResponse;
+    AIR?: ModeResponse;
+}
+
+export const getFreightEstimates = async (req: EstimateRequest): Promise<EstimateResponse | null> => {
+    const apiKey = process.env.FREIGHTOS_API_KEY;
+
+    if (!apiKey) {
+        console.warn("Missing FREIGHTOS_API_KEY. Using Mock Data.");
+        return {
+            OCEAN: {
+                priceEstimates: { min: 2500, max: 3200 },
+                transitTime: { min: 25, max: 35 }
             },
-            {
-                name: "Bearer SECRET_KEY",
-                headers: {
-                    "Authorization": `Bearer ${secretKey}`,
-                    "Content-Type": "application/json"
-                }
-            },
-            {
-                name: "X-App-ID + X-App-Key (Secret)",
-                headers: {
-                    "X-App-ID": appId || "",
-                    "X-App-Key": secretKey || "",
-                    "Content-Type": "application/json"
-                }
-            },
-            {
-                name: "X-App-ID + X-API-Key (API Key)",
-                headers: {
-                    "X-App-ID": appId || "",
-                    "x-api-key": apiKey || "",
-                    "Content-Type": "application/json"
-                }
+            AIR: {
+                priceEstimates: { min: 4800, max: 5500 },
+                transitTime: { min: 3, max: 5 }
             }
-        ];
-
-        // Trying a standard payload structure for a generic shipping calculator
-        const payload = {
-            origin: "Shanghai",
-            destination: "Los Angeles",
-            weight: 500,
-            unit: "kg",
-            type: "LCL",
-            readyDate: new Date().toISOString().split('T')[0]
         };
+    }
 
-        const results = [];
+    const url = "https://sandbox.freightos.com/api/v1/freightEstimates";
 
-        for (const strategy of strategies) {
-            console.log(`🔄 Trying Strategy: ${strategy.name}`);
-            try {
-                const response = await fetch(FREIGHTOS_API_URL, {
-                    method: "POST",
-                    headers: strategy.headers,
-                    body: JSON.stringify(payload)
-                });
+    const payload = {
+        load: req.load,
+        legs: [{
+            origin: { unLocationCode: req.origin.toUpperCase() },
+            destination: { unLocationCode: req.destination.toUpperCase() }
+        }]
+    };
 
-                const responseText = await response.text();
-                console.log(`   Status: ${response.status}`);
-                // console.log(`   Response: ${responseText.substring(0, 100)}...`);
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "x-apikey": apiKey
+            },
+            body: JSON.stringify(payload)
+        });
 
-                let data;
-                try {
-                    data = JSON.parse(responseText);
-                } catch (e) {
-                    data = responseText;
-                }
-
-                results.push({
-                    strategy: strategy.name,
-                    status: response.status,
-                    success: response.ok,
-                    data_preview: typeof data === 'string' ? data.substring(0, 200) : JSON.stringify(data).substring(0, 200)
-                });
-
-                if (response.ok) {
-                    console.log("✅ SUCCESS with strategy:", strategy.name);
-                    return {
-                        success: true,
-                        strategy: strategy.name,
-                        status: response.status,
-                        data: data
-                    };
-                }
-
-            } catch (error: any) {
-                console.error(`   Failed: ${error.message}`);
-                results.push({ strategy: strategy.name, error: error.message });
-            }
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Freightos API Error (${response.status}):`, errorText);
+            throw new Error(`Freightos API Error: ${response.status} - ${errorText}`);
         }
 
-        return {
-            success: false,
-            message: "All auth strategies failed",
-            results: results
-        };
-    },
-});
+        const data = await response.json();
+        return data as EstimateResponse;
+    } catch (error) {
+        console.error("Freightos Request Failed:", error);
+        throw error;
+    }
+};
