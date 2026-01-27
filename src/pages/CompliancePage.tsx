@@ -190,7 +190,10 @@ const CompliancePage = () => {
           </div>
         </div>
 
-        {/* 3. Document Templates (Bottom Row) */}
+        {/* 3. GATED: AI Risk Analysis Overlay example */}
+        <AiRiskAnalysisSection />
+
+        {/* 4. Document Templates (Bottom Row) */}
         <div className="bg-white rounded-lg border bg-card text-card-foreground p-6 shadow-sm">
           <div className="mb-6">
             <h2 className="text-xl font-semibold">Document Templates</h2>
@@ -220,7 +223,7 @@ const CompliancePage = () => {
           </div>
         </div>
 
-        {/* 4. Customs Clearance Checklist (New) */}
+        {/* 5. Customs Clearance Checklist (New) */}
         <Card className="bg-amber-50 border-amber-200">
           <CardHeader>
             <CardTitle className="text-amber-800 flex items-center gap-2">
@@ -260,9 +263,6 @@ const CompliancePage = () => {
             Missing any? Add now in <Link to="/documents" className="underline ml-1 hover:text-amber-900">Documents → Upload & Autofill</Link>
           </CardFooter>
         </Card>
-
-        {/* 5. GATED: AI Risk Analysis Overlay example */}
-        <AiRiskAnalysisSection />
       </div>
     </div>
   );
