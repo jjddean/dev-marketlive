@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import DataTable from '@/components/ui/data-table';
 import AdminPageHeader from '@/components/layout/admin/AdminPageHeader';
+import { useAction } from "convex/react";
 
 const AdminCustomersPage = () => {
     // const { toast } = useToast(); // Removed
@@ -158,13 +159,15 @@ const AdminCustomersPage = () => {
 
     return (
         <div className="space-y-6">
-            <AdminPageHeader
-                title="Customer Management"
-                subtitle="Manage users, organizations, and access controls."
-                actionLabel="Add User"
-                onAction={() => { }}
-                icon={Users}
-            />
+            <div className="flex justify-between items-center">
+                <AdminPageHeader
+                    title="Customer Management"
+                    subtitle="Manage users, organizations, and access controls."
+                    actionLabel="Add User"
+                    onAction={() => { }}
+                    icon={Users}
+                />
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="p-6 bg-white shadow-sm border border-gray-200">

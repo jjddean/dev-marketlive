@@ -1,10 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import {
   SignedIn,
   SignedOut,
   SignInButton,
   SignUpButton,
-  UserButton,
   ClerkProvider,
   useAuth,
   useUser
@@ -20,42 +19,47 @@ import Navbar from './components/Navbar';
 import MobileNavigation from './components/mobile/MobileNavigation';
 import { AIAssistant } from './components/ai/AIAssistant';
 import AdminLayout from './components/layout/admin/AdminLayout';
-
-// Pages
-import {
-  HomePage, ServicesPage, SolutionsPage, PlatformPage,
-  ResourcesPage, AboutPage, ContactPage, DashboardPage,
-  ShipmentsPage, PaymentsPage, CompliancePage, DocumentsPage,
-  ReportsPage, AccountPage, ClientQuotesPage, WaitlistPage
-} from './pages';
-import ClientBookingsPage from './pages/client/ClientBookingsPage';
-import ApiDocsPage from './pages/ApiDocsPage';
-import SharedDocumentPage from './pages/SharedDocumentPage';
-import DocusignCallbackPage from './pages/DocusignCallbackPage';
-import AdminDashboardPage from './pages/admin/AdminDashboardPage';
-import AdminApprovalsPage from './pages/admin/AdminApprovalsPage';
-import AdminBookingsPage from './pages/admin/AdminBookingsPage';
-import AdminFinancePage from './pages/admin/AdminFinancePage';
-import AdminWaitlistPage from './pages/admin/AdminWaitlistPage';
-import AdminAuditPage from './pages/admin/AdminAuditPage';
-import AdminCustomersPage from './pages/admin/AdminCustomersPage';
-import AdminShipmentsPage from './pages/admin/AdminShipmentsPage';
-import AdminCarriersPage from './pages/admin/AdminCarriersPage';
-import AdminDocumentsPage from './pages/admin/AdminDocumentsPage';
-import AdminCompliancePage from './pages/admin/AdminCompliancePage';
-
-import AdminSettingsPage from './pages/admin/AdminSettingsPage';
-import DocumentPrintPage from './pages/DocumentPrintPage';
 import ClientSidebar from './components/layout/ClientSidebar';
 import { useRole } from './hooks/useRole';
+import { LoadingSpinner } from './components/ui/LoadingSpinner';
 
-// Initialization
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
+// Pages - Lazy Loaded
+const HomePage = lazy(() => import('./pages/HomePage'));
+const ServicesPage = lazy(() => import('./pages/ServicesPage'));
+const SolutionsPage = lazy(() => import('./pages/SolutionsPage'));
+const ResourcesPage = lazy(() => import('./pages/ResourcesPage')); // Assuming this existed based on imports
+const PlatformPage = lazy(() => import('./pages/PlatformPage')); // Assuming this existed
+const AboutPage = lazy(() => import('./pages/AboutPage'));
+const ContactPage = lazy(() => import('./pages/ContactPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const ShipmentsPage = lazy(() => import('./pages/ShipmentsPage'));
+const PaymentsPage = lazy(() => import('./pages/PaymentsPage'));
+const CompliancePage = lazy(() => import('./pages/CompliancePage'));
+const DocumentsPage = lazy(() => import('./pages/DocumentsPage'));
+const ReportsPage = lazy(() => import('./pages/ReportsPage'));
+const AccountPage = lazy(() => import('./pages/AccountPage'));
+const ClientQuotesPage = lazy(() => import('./pages/client/ClientQuotesPage'));
+const WaitlistPage = lazy(() => import('./pages/WaitlistPage'));
+const ClientBookingsPage = lazy(() => import('./pages/client/ClientBookingsPage'));
+const ApiDocsPage = lazy(() => import('./pages/ApiDocsPage'));
+const SharedDocumentPage = lazy(() => import('./pages/SharedDocumentPage'));
+const DocusignCallbackPage = lazy(() => import('./pages/DocusignCallbackPage'));
+const DocumentPrintPage = lazy(() => import('./pages/DocumentPrintPage'));
 
-if (!PUBLISHABLE_KEY) {
-  throw new Error('Missing Clerk Publishable Key');
-}
+// Admin Pages - Lazy Loaded
+const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'));
+const AdminApprovalsPage = lazy(() => import('./pages/admin/AdminApprovalsPage'));
+const AdminBookingsPage = lazy(() => import('./pages/admin/AdminBookingsPage'));
+const AdminFinancePage = lazy(() => import('./pages/admin/AdminFinancePage'));
+const AdminWaitlistPage = lazy(() => import('./pages/admin/AdminWaitlistPage'));
+const AdminAuditPage = lazy(() => import('./pages/admin/AdminAuditPage'));
+const AdminCustomersPage = lazy(() => import('./pages/admin/AdminCustomersPage'));
+const AdminShipmentsPage = lazy(() => import('./pages/admin/AdminShipmentsPage'));
+const AdminCarriersPage = lazy(() => import('./pages/admin/AdminCarriersPage'));
+const AdminDocumentsPage = lazy(() => import('./pages/admin/AdminDocumentsPage'));
+const AdminCompliancePage = lazy(() => import('./pages/admin/AdminCompliancePage'));
+const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage'));
+
 
 // --- Helper Components ---
 
@@ -63,16 +67,22 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
+
+if (!PUBLISHABLE_KEY) {
+  throw new Error('Missing Clerk Publishable Key');
+}
+
 function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
 
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW failed', err));
-    }
-    console.log("MARKET LIVE: Version 8080");
+    // Service Worker registration moved to main.tsx
+    console.log("MARKET LIVE: Version 8081");
   }, []);
+
   const isClientApp = [
     '/dashboard', '/shipments', '/bookings', '/quotes',
     '/payments', '/documents', '/compliance', '/reports', '/account', '/api'
@@ -84,7 +94,11 @@ function Layout({ children }: LayoutProps) {
       {!isAdmin && !isClientApp && <MobileNavigation />}
       <AIAssistant />
       <Toaster richColors position="bottom-right" style={{ zIndex: 99999 }} />
-      <main className="min-h-screen">{children}</main>
+      <main className="min-h-screen">
+        <Suspense fallback={<LoadingSpinner />}>
+          {children}
+        </Suspense>
+      </main>
     </>
   );
 }
@@ -115,9 +129,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 // Admin Route Wrapper - Role-based permissions
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoaded } = useUser();
-  const { isAdmin, isPlatformAdmin, isLoading: isRoleLoading } = useRole();
+  const { isAdmin, isLoading: isRoleLoading } = useRole();
 
-  if (!isLoaded || isRoleLoading) return <div className="p-20 text-center">Loading...</div>;
+  if (!isLoaded || isRoleLoading) return <LoadingSpinner />;
 
   // Allow access if user is admin or platform superadmin
   // Also fallback to email whitelist for backward compatibility during migration

@@ -4,7 +4,7 @@ import { Check } from 'lucide-react';
 import MediaCardHeader from '@/components/ui/media-card-header';
 import DataTable from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
-import { UserProfile } from '@clerk/clerk-react';
+import { UserProfile, useOrganization, useUser, useClerk } from '@clerk/clerk-react';
 import Footer from '@/components/layout/Footer';
 import { useQuery, useAction, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -17,8 +17,14 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { useStripeCheckout } from '@/hooks/useStripeCheckout';
+import SubscriptionCards from '@/components/subscription/SubscriptionCards';
 
 const PaymentsPage = () => {
+  const { user } = useUser();
+  const { organization } = useOrganization();
+  // Resolve current tier
+  const currentTier = (organization?.publicMetadata?.subscriptionTier as string) || (user?.publicMetadata?.subscriptionTier as string) || 'free';
+
   const [activeTab, setActiveTab] = useState('invoices');
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
 
@@ -344,88 +350,10 @@ const PaymentsPage = () => {
 
         {activeTab === 'subscription' && (
           <div className="py-8">
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {/* Free Plan */}
-              <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 flex flex-col">
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Free</h3>
-                  <p className="text-gray-500 text-sm">Essential features for small teams</p>
-                </div>
-                <div className="mb-6">
-                  <span className="text-3xl font-bold text-gray-900">£0</span>
-                  <span className="text-gray-500">/mo</span>
-                </div>
-                <ul className="mb-8 space-y-3 flex-1">
-                  <li className="flex items-center text-sm text-gray-600">
-                    <Check className="h-4 w-4 text-green-500 mr-2" />
-                    Up to 5 shipments/mo
-                  </li>
-                  <li className="flex items-center text-sm text-gray-600">
-                    <Check className="h-4 w-4 text-green-500 mr-2" />
-                    Basic support
-                  </li>
-                </ul>
-                <Button variant="outline" disabled className="w-full">Current Plan</Button>
-              </div>
-
-              {/* Pro Plan */}
-              <div className="bg-white border border-blue-200 ring-1 ring-blue-500 rounded-lg shadow-sm p-6 flex flex-col relative">
-                <div className="absolute top-0 right-0 -mr-1 -mt-1 w-24 overflow-hidden">
-                  <div className="bg-blue-500 text-white text-xs font-bold px-3 py-1 text-center transform rotate-0 rounded-bl-lg">POPULAR</div>
-                </div>
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Pro</h3>
-                  <p className="text-gray-500 text-sm">Advanced tools for growing businesses</p>
-                </div>
-                <div className="mb-6">
-                  <span className="text-3xl font-bold text-gray-900">£49</span>
-                  <span className="text-gray-500">/mo</span>
-                </div>
-                <ul className="mb-8 space-y-3 flex-1">
-                  <li className="flex items-center text-sm text-gray-600">
-                    <Check className="h-4 w-4 text-primary mr-2" />
-                    Unlimited shipments
-                  </li>
-                  <li className="flex items-center text-sm text-gray-600">
-                    <Check className="h-4 w-4 text-primary mr-2" />
-                    Priority support
-                  </li>
-                  <li className="flex items-center text-sm text-gray-600">
-                    <Check className="h-4 w-4 text-primary mr-2" />
-                    Advanced Analytics
-                  </li>
-                </ul>
-                <Button onClick={() => handleUpgrade("price_1StLAaElmOA4YPwbAXH9o3Z0", "pro")} className="w-full">Switch to Pro</Button>
-              </div>
-
-              {/* Enterprise Plan */}
-              <div className="bg-gray-50 border border-gray-200 rounded-lg shadow-sm p-6 flex flex-col">
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Enterprise</h3>
-                  <p className="text-gray-500 text-sm">Custom solutions for large scale</p>
-                </div>
-                <div className="mb-6">
-                  <span className="text-3xl font-bold text-gray-900">£149</span>
-                  <span className="text-gray-500">/mo</span>
-                </div>
-                <ul className="mb-8 space-y-3 flex-1">
-                  <li className="flex items-center text-sm text-gray-600">
-                    <Check className="h-4 w-4 text-green-500 mr-2" />
-                    Dedicated Account Manager
-                  </li>
-                  <li className="flex items-center text-sm text-gray-600">
-                    <Check className="h-4 w-4 text-green-500 mr-2" />
-                    Custom Integrations
-                  </li>
-                  <li className="flex items-center text-sm text-gray-600">
-                    <Check className="h-4 w-4 text-green-500 mr-2" />
-                    SLA Guarantees
-                  </li>
-                </ul>
-                <Button onClick={() => handleUpgrade("price_1StLDoElmOA4YPwbgS6cTUMP", "enterprise")} variant="outline" className="w-full">Switch to Enterprise</Button>
-              </div>
-
-            </div>
+            <SubscriptionCards
+              currentTier={currentTier}
+              onUpgrade={handleUpgrade}
+            />
 
             <div className="mt-8 bg-white border border-gray-200 rounded-lg p-6">
               <div className="flex items-center justify-between">

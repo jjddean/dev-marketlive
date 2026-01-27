@@ -19,6 +19,33 @@ export const listUsers = query({
   }
 });
 
+
+
+// storeUser removed
+
+
+export const ensureUserExists = internalMutation({
+  args: {
+    identity: v.any(),
+  },
+  async handler(ctx, { identity }) {
+    const externalId = identity.subject;
+    const user = await userByExternalId(ctx, externalId);
+
+    const userAttributes = {
+      name: identity.name || identity.email || 'Unknown User',
+      externalId: externalId,
+      email: identity.email,
+    };
+
+    if (user === null) {
+      await ctx.db.insert("users", userAttributes);
+    } else {
+      await ctx.db.patch(user._id, userAttributes);
+    }
+  }
+});
+
 export const upsertFromClerk = internalMutation({
   args: { data: v.any() as Validator<UserJSON> }, // no runtime validation, trust Clerk
   async handler(ctx, { data }) {

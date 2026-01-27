@@ -15,6 +15,14 @@ if (container) {
   // The most robust solution is to ensure the initialization code runs only once.
 
   const root = ReactDOMClient.createRoot(container);
+
+  // Register Service Worker for offline support
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW failed', err));
+    });
+  }
+
   root.render(
     // Disabled to prevent 'Map container is already initialized' error with React Leaflet
     <App />

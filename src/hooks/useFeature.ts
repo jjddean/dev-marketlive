@@ -1,3 +1,4 @@
+import React from 'react';
 import { useOrganization, useUser } from "@clerk/clerk-react";
 
 export type Feature =
@@ -22,21 +23,21 @@ export function useFeature(feature: Feature) {
 
     if (!isOrgLoaded || !isUserLoaded) return false;
 
-    // 1. Check Organization Context - Organization Tier Takes Precedence if Active
-    // If the user is currently operating in an Organization context, use that organization's tier.
-    if (organization) {
-        const tier = (organization.publicMetadata?.subscriptionTier as string) || "free";
-        const normalizedTier = tier.toLowerCase();
-        return TIER_FEATURES[normalizedTier]?.includes(feature) || false;
-    }
+    return React.useMemo(() => {
+        // 1. Check Organization Context - Organization Tier Takes Precedence if Active
+        if (organization) {
+            const tier = (organization.publicMetadata?.subscriptionTier as string) || "free";
+            const normalizedTier = tier.toLowerCase();
+            return TIER_FEATURES[normalizedTier]?.includes(feature) || false;
+        }
 
-    // 2. Fallback to Personal Context - Check User Metadata
-    // If no organization is currently active (Personal Workspace), check the user's personal tier.
-    if (user) {
-        const tier = (user.publicMetadata?.subscriptionTier as string) || "free";
-        const normalizedTier = tier.toLowerCase();
-        return TIER_FEATURES[normalizedTier]?.includes(feature) || false;
-    }
+        // 2. Fallback to Personal Context - Check User Metadata
+        if (user) {
+            const tier = (user.publicMetadata?.subscriptionTier as string) || "free";
+            const normalizedTier = tier.toLowerCase();
+            return TIER_FEATURES[normalizedTier]?.includes(feature) || false;
+        }
 
-    return false;
+        return false;
+    }, [organization, user, feature, isOrgLoaded, isUserLoaded]);
 }
