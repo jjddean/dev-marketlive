@@ -2,6 +2,8 @@
 
 This project demonstrates how to implement authentication in a React application using [Clerk](https://clerk.com/).
 
+> **Latest Update:** v1.0.1 - Performance Fixes & Compliance UI (Deployed: Jan 27, 2026)
+
 ## Features
 
 - User authentication (sign up, sign in, sign out)
